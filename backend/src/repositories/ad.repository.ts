@@ -1,17 +1,17 @@
 import { Prisma } from '@prisma/client';
-import { AdStatus } from '@prisma/client';
+import { AdStatus } from '../types/shared';
 import { prisma } from '../config/database';
 
-const adWithRelations = Prisma.validator<Prisma.AdDefaultArgs>()({
+const adWithRelations = {
   include: {
     user: { select: { id: true, name: true, email: true } },
     reviewedBy: { select: { id: true, name: true } },
     performance: {
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'desc' as const },
       take: 30,
     },
   },
-});
+} satisfies Prisma.AdFindUniqueArgs;
 
 export type AdWithRelations = Prisma.AdGetPayload<typeof adWithRelations>;
 

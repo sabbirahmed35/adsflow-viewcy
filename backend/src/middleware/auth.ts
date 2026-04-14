@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { prisma } from '../config/database';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../types/shared';
 
 export interface AuthPayload {
   userId: string;

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { config } from '../config';
 import { prisma } from '../config/database';
-import { AdStatus } from '@prisma/client';
+import { AdStatus } from '../types/shared';
 import { logger } from '../utils/logger';
 
 /**
