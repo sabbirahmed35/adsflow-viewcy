@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { authController } from '../controllers/auth.controller';
-import { adController } from '../controllers/ad.controller';
-import { adminController } from '../controllers/admin.controller';
-import { aiController } from '../controllers/ai.controller';
-import { uploadController, upload } from '../controllers/upload.controller';
-import { authenticate, requireAdmin, requireClient } from '../middleware/auth';
+import { authController } from './controllers/auth.controller';
+import { adController } from './controllers/ad.controller';
+import { adminController } from './controllers/admin.controller';
+import { aiController } from './controllers/ai.controller';
+import { uploadController, upload } from './controllers/upload.controller';
+import { webhookController } from './controllers/webhook.controller';
+import { authenticate, requireAdmin, requireClient } from './middleware/auth';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authRouter = Router();
@@ -49,7 +50,6 @@ uploadRouter.post('/creative',       upload.single('file'), (req, res, next) => 
 uploadRouter.post('/presigned-url',  (req, res, next) => uploadController.getPresignedUrl(req, res).catch(next));
 
 // ─── Webhooks (no auth — Meta calls these directly) ───────────────────────────
-import { webhookController } from '../controllers/webhook.controller';
 export const webhookRouter = Router();
 webhookRouter.get('/meta',  (req, res) => webhookController.verify(req, res));
 webhookRouter.post('/meta', (req, res, next) => webhookController.receive(req, res).catch(next));
