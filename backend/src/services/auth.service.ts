@@ -5,7 +5,7 @@ import { prisma } from '../config/database';
 import { config } from '../config';
 import { AppError, ConflictError } from '../middleware/errorHandler';
 import { AuthPayload } from '../middleware/auth';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../types/shared';
 
 export interface TokenPair {
   accessToken: string;

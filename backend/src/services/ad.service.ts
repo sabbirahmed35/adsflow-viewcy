@@ -1,4 +1,5 @@
-import { AdStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { AdStatus } from '../types/shared';
 import { adRepository } from '../repositories/ad.repository';
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../middleware/errorHandler';
 import { getPublishQueue } from '../config/queue';

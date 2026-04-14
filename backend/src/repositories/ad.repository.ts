@@ -1,4 +1,5 @@
-import { Prisma, AdStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { AdStatus } from '../types/shared';
 import { prisma } from '../config/database';
 
 const adWithRelations = Prisma.validator<Prisma.AdDefaultArgs>()({
@@ -128,8 +129,8 @@ export class AdRepository {
     ]);
 
     return {
-      totalAds: byStatus.reduce((sum, s) => sum + s._count, 0),
-      byStatus: Object.fromEntries(byStatus.map((s) => [s.status, s._count])),
+      totalAds: byStatus.reduce((sum: number, s: { _count: number }) => sum + s._count, 0),
+      byStatus: Object.fromEntries(byStatus.map((s: { status: string; _count: number }) => [s.status, s._count])),
       totalSpend: perfAgg._sum.spend ?? 0,
       totalImpressions: perfAgg._sum.impressions ?? 0,
       totalClicks: perfAgg._sum.clicks ?? 0,

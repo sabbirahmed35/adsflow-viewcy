@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../types/shared';
 
 export class UserRepository {
   async findById(id: string) {
