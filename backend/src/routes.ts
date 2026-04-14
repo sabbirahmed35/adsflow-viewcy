@@ -49,7 +49,7 @@ uploadRouter.post('/creative',       upload.single('file'), (req, res, next) => 
 uploadRouter.post('/presigned-url',  (req, res, next) => uploadController.getPresignedUrl(req, res).catch(next));
 
 // ─── Webhooks (no auth — Meta calls these directly) ───────────────────────────
-import { webhookController } from './controllers/webhook.controller';
+import { webhookController } from '../controllers/webhook.controller';
 export const webhookRouter = Router();
 webhookRouter.get('/meta',  (req, res) => webhookController.verify(req, res));
 webhookRouter.post('/meta', (req, res, next) => webhookController.receive(req, res).catch(next));
