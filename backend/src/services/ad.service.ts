@@ -6,7 +6,7 @@ import { QUEUE_NAMES } from '../config/queue';
 import { PublishAdJobPayload } from '../types/shared';
 import { logger } from '../utils/logger';
 
-const EDITABLE_STATUSES = [AdStatus.DRAFT, AdStatus.REJECTED];
+const EDITABLE_STATUSES: AdStatus[] = [AdStatus.DRAFT, AdStatus.REJECTED];
 
 export class AdService {
   async getUserAds(userId: string, page = 1, limit = 20, status?: AdStatus) {
