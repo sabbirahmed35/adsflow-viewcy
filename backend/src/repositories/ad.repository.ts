@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { AdStatus } from '../types/shared';
+import { AdStatus } from '@prisma/client';
 import { prisma } from '../config/database';
 
 const adWithRelations = Prisma.validator<Prisma.AdDefaultArgs>()({

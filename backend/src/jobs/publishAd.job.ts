@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { AdStatus } from '../types/shared';
+import { AdStatus } from '@prisma/client';
 import { prisma } from '../config/database';
 import { metaService } from '../services/meta.service';
 import { PublishAdJobPayload } from '../types/shared';

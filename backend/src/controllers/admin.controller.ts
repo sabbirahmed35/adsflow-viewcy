@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { adService } from '../services/ad.service';
 import { ok } from '../middleware/errorHandler';
-import { AdStatus } from '../types/shared';
+import { AdStatus } from '@prisma/client';
 
 export class AdminController {
   async listAds(req: Request, res: Response) {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { adService } from '../services/ad.service';
 import { ok, created, noContent } from '../middleware/errorHandler';
 
-import { AdStatus, BudgetType, CampaignObjective, CtaType, UserRole } from '../types/shared';
+import { AdStatus, BudgetType, CampaignObjective, CtaType, UserRole } from '@prisma/client';
 
 const createAdSchema = z.object({
   websiteUrl: z.string().url(),
