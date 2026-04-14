@@ -1,42 +1,5 @@
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-export enum UserRole {
-  CLIENT = 'CLIENT',
-  ADMIN = 'ADMIN',
-}
-
-export enum AdStatus {
-  DRAFT = 'DRAFT',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  PUBLISHING = 'PUBLISHING',
-  PUBLISHED = 'PUBLISHED',
-  PAUSED = 'PAUSED',
-  FAILED = 'FAILED',
-}
-
-export enum CampaignObjective {
-  TRAFFIC = 'TRAFFIC',
-  AWARENESS = 'AWARENESS',
-  SALES = 'SALES',
-  LEAD_GENERATION = 'LEAD_GENERATION',
-}
-
-export enum BudgetType {
-  DAILY = 'DAILY',
-  LIFETIME = 'LIFETIME',
-}
-
-export enum CtaType {
-  LEARN_MORE = 'LEARN_MORE',
-  SHOP_NOW = 'SHOP_NOW',
-  SIGN_UP = 'SIGN_UP',
-  GET_OFFER = 'GET_OFFER',
-  BOOK_NOW = 'BOOK_NOW',
-  CONTACT_US = 'CONTACT_US',
-  DOWNLOAD = 'DOWNLOAD',
-}
+// Re-export Prisma enums so shared types stay compatible
+export { UserRole, AdStatus, CampaignObjective, BudgetType, CtaType } from '@prisma/client';
 
 export enum Placement {
   AUTOMATIC = 'AUTOMATIC',
@@ -47,6 +10,8 @@ export enum Placement {
 }
 
 // ─── Core Models ──────────────────────────────────────────────────────────────
+
+import { UserRole, AdStatus, CtaType, CampaignObjective, BudgetType } from '@prisma/client';
 
 export interface User {
   id: string;
@@ -61,8 +26,6 @@ export interface Ad {
   userId: string;
   user?: Pick<User, 'id' | 'name' | 'email'>;
   status: AdStatus;
-
-  // Content
   websiteUrl: string;
   primaryText: string;
   headline: string;
@@ -70,35 +33,24 @@ export interface Ad {
   cta: CtaType;
   creativeUrl: string | null;
   creativeType: 'IMAGE' | 'VIDEO' | null;
-
-  // Campaign settings
   objective: CampaignObjective;
   budgetType: BudgetType;
   budgetAmount: number;
   startDate: string | null;
   endDate: string | null;
-
-  // Audience
   locations: string[];
   ageMin: number;
   ageMax: number;
   interests: string[];
   placements: Placement[];
-
-  // Meta IDs (set after publishing)
   metaCampaignId: string | null;
   metaAdSetId: string | null;
   metaAdId: string | null;
-
-  // Admin
   rejectionReason: string | null;
   reviewedBy: string | null;
   reviewedAt: string | null;
-
   createdAt: string;
   updatedAt: string;
-
-  // Joined
   performance?: AdPerformance[];
   latestPerformance?: AdPerformance | null;
 }
@@ -170,10 +122,6 @@ export interface UploadCreativeResponse {
   mimeType: string;
 }
 
-export interface ApproveAdDTO {
-  // no body required
-}
-
 export interface RejectAdDTO {
   reason: string;
 }
@@ -195,8 +143,6 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
-
 export interface PaginationQuery {
   page?: number;
   limit?: number;
@@ -212,8 +158,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-// ─── Admin Stats ──────────────────────────────────────────────────────────────
-
 export interface AdminStats {
   totalAds: number;
   byStatus: Record<AdStatus, number>;
@@ -223,8 +167,6 @@ export interface AdminStats {
   avgCtr: number;
 }
 
-// ─── API Response wrapper ─────────────────────────────────────────────────────
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -232,13 +174,11 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
-// ─── Job payloads ─────────────────────────────────────────────────────────────
-
 export interface PublishAdJobPayload {
   adId: string;
   approvedBy: string;
 }
 
 export interface SyncPerformanceJobPayload {
-  adId?: string; // if absent, syncs all published ads
+  adId?: string;
 }

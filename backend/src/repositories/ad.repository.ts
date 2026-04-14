@@ -11,9 +11,9 @@ const adWithRelations = {
       take: 30,
     },
   },
-} satisfies Prisma.AdFindUniqueArgs;
+};
 
-export type AdWithRelations = Prisma.AdGetPayload<typeof adWithRelations>;
+export type AdWithRelations = Prisma.AdGetPayload<{ include: typeof adWithRelations.include }>;
 
 export class AdRepository {
   async findById(id: string): Promise<AdWithRelations | null> {
