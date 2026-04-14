@@ -15,7 +15,7 @@ export const upload = multer({
       ...config.upload.allowedImageTypes,
       ...config.upload.allowedVideoTypes,
     ];
-    if (allowed.includes(file.mimetype)) {
+    if (allowed.includes(file.mimetype as any)) {
       cb(null, true);
     } else {
       cb(new AppError(400, `Unsupported file type: ${file.mimetype}`) as any);

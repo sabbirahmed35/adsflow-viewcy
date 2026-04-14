@@ -15,7 +15,7 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
-  prisma.$on('query', (e) => {
+  (prisma as any).$on('query', (e: any) => {
     if (process.env.LOG_QUERIES === 'true') {
       logger.debug('Query: ' + e.query, { duration: e.duration + 'ms' });
     }

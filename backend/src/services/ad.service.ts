@@ -3,7 +3,7 @@ import { adRepository } from '../repositories/ad.repository';
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../middleware/errorHandler';
 import { getPublishQueue } from '../config/queue';
 import { QUEUE_NAMES } from '../config/queue';
-import { PublishAdJobPayload } from '../../../shared/types';
+import { PublishAdJobPayload } from '@shared/types';
 import { logger } from '../utils/logger';
 
 const EDITABLE_STATUSES = [AdStatus.DRAFT, AdStatus.REJECTED];
@@ -67,9 +67,9 @@ export class AdService {
       throw new ValidationError(`Missing required fields: ${missing.join(', ')}`);
     }
 
-    return adRepository.updateStatus(id, AdStatus.PENDING, {
+    return adRepository.updateStatus(id, AdStatus.PENDING as any, {
       rejectionReason: null,
-      reviewedById: null,
+      reviewedBy: { disconnect: true },
       reviewedAt: null,
     });
   }
@@ -81,8 +81,8 @@ export class AdService {
       throw new ValidationError(`Ad is not pending approval (status: ${ad.status})`);
     }
 
-    const updated = await adRepository.updateStatus(id, AdStatus.APPROVED, {
-      reviewedById: adminId,
+    const updated = await adRepository.updateStatus(id, AdStatus.APPROVED as any, {
+      reviewedBy: { connect: { id: adminId } },
       reviewedAt: new Date(),
     });
 
@@ -106,9 +106,9 @@ export class AdService {
     }
     if (!reason?.trim()) throw new ValidationError('Rejection reason is required');
 
-    return adRepository.updateStatus(id, AdStatus.REJECTED, {
+    return adRepository.updateStatus(id, AdStatus.REJECTED as any, {
       rejectionReason: reason,
-      reviewedById: adminId,
+      reviewedBy: { connect: { id: adminId } },
       reviewedAt: new Date(),
     });
   }

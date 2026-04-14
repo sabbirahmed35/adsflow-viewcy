@@ -8,7 +8,7 @@ interface MetaApiError {
   error: { message: string; type: string; code: number; fbtrace_id: string };
 }
 
-async function metaRequest<T>(
+async function metaRequest<T extends object>(
   method: 'GET' | 'POST' | 'DELETE',
   path: string,
   body?: Record<string, unknown>

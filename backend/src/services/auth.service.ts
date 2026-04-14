@@ -78,7 +78,7 @@ export class AuthService {
     const payload: AuthPayload = { userId, email, role };
 
     const accessToken = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn as string,
+      expiresIn: config.jwt.expiresIn as any,
     });
 
     const refreshToken = uuidv4();

@@ -3,7 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { AppError } from '../middleware/errorHandler';
-import { UploadCreativeResponse } from '../../../shared/types';
+import { UploadCreativeResponse } from '@shared/types';
 
 const s3 = new S3Client({
   region: config.aws.region,
@@ -23,8 +23,8 @@ export class UploadService {
       throw new AppError(503, 'Storage service not configured');
     }
 
-    const isVideo = config.upload.allowedVideoTypes.includes(mimeType);
-    const isImage = config.upload.allowedImageTypes.includes(mimeType);
+    const isVideo = config.upload.allowedVideoTypes.includes(mimeType as any);
+    const isImage = config.upload.allowedImageTypes.includes(mimeType as any);
 
     if (!isImage && !isVideo) {
       throw new AppError(400, `Unsupported file type: ${mimeType}`);
