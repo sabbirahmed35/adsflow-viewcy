@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  ADMIN
+}
+
+enum AdStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  PUBLISHING
+  PUBLISHED
+  PAUSED
+  FAILED
+}
+
+enum CampaignObjective {
+  TRAFFIC
+  AWARENESS
+  SALES
+  LEAD_GENERATION
+}
+
+enum BudgetType {
+  DAILY
+  LIFETIME
+}
+
+enum CtaType {
+  LEARN_MORE
+  SHOP_NOW
+  SIGN_UP
+  GET_OFFER
+  BOOK_NOW
+  CONTACT_US
+  DOWNLOAD
+}
+
+enum CreativeType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(CLIENT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ads          Ad[]
+  reviewedAds  Ad[]     @relation("ReviewedBy")
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Ad {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      AdStatus @default(DRAFT)
+
+  // Ad content
+  websiteUrl  String
+  primaryText String   @db.Text
+  headline    String
+  description String
+  cta         CtaType  @default(LEARN_MORE)
+
+  // Creative
+  creativeUrl  String?
+  creativeType CreativeType?
+  creativeKey  String?       // S3 key
+
+  // Campaign settings
+  objective   CampaignObjective @default(TRAFFIC)
+  budgetType  BudgetType        @default(DAILY)
+  budgetAmount Float
+  startDate   DateTime?
+  endDate     DateTime?
+
+  // Audience (stored as JSON arrays)
+  locations   String[]
+  ageMin      Int      @default(18)
+  ageMax      Int      @default(65)
+  interests   String[]
+  placements  String[]
+
+  // Meta API IDs
+  metaCampaignId String?
+  metaAdSetId    String?
+  metaAdId       String?
+
+  // Review
+  rejectionReason String? @db.Text
+  reviewedById    String?
+  reviewedBy      User?   @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+
+  // Publish error (if FAILED)
+  publishError String? @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  performance AdPerformance[]
+
+  @@map("ads")
+}
+
+model AdPerformance {
+  id           String   @id @default(uuid())
+  adId         String
+  ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  ctr          Float    @default(0)
+  cpc          Float    @default(0)
+  cpm          Float    @default(0)
+  spend        Float    @default(0)
+  conversions  Int      @default(0)
+  reach        Int      @default(0)
+  frequency    Float    @default(0)
+
+  createdAt    DateTime @default(now())
+
+  @@unique([adId, date])
+  @@map("ad_performance")
+}
