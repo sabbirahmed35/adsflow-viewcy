@@ -2,7 +2,7 @@ import { Job } from 'bullmq';
 import { AdStatus } from '@prisma/client';
 import { prisma } from '../config/database';
 import { metaService } from '../services/meta.service';
-import { PublishAdJobPayload } from '../../../shared/types';
+import { PublishAdJobPayload } from '../types/shared';
 import { logger } from '../utils/logger';
 
 export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<void> {

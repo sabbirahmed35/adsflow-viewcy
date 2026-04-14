@@ -1,7 +1,7 @@
 import { Job } from 'bullmq';
 import { prisma } from '../config/database';
 import { metaService } from '../services/meta.service';
-import { SyncPerformanceJobPayload } from '../../../shared/types';
+import { SyncPerformanceJobPayload } from '../types/shared';
 import { logger } from '../utils/logger';
 
 export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>): Promise<void> {

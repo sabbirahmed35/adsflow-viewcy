@@ -12,8 +12,6 @@ RUN npm ci
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY backend/ .
-COPY shared/ ./shared
-
 RUN npx prisma generate
 RUN npm run build
 

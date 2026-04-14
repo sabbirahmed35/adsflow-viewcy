@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
 import { AppError } from '../middleware/errorHandler';
-import { GeneratedCopy, ExtractedUrlMetadata } from '../../../shared/types';
+import { GeneratedCopy, ExtractedUrlMetadata } from '../types/shared';
 import { logger } from '../utils/logger';
 
 // Lazy-init to avoid crash if key not set in dev

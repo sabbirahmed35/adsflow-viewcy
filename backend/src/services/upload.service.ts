@@ -3,7 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { AppError } from '../middleware/errorHandler';
-import { UploadCreativeResponse } from '@shared/types';
+import { UploadCreativeResponse } from '../types/shared';
 
 const s3 = new S3Client({
   region: config.aws.region,

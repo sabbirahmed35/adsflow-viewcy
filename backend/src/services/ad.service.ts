@@ -3,7 +3,7 @@ import { adRepository } from '../repositories/ad.repository';
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../middleware/errorHandler';
 import { getPublishQueue } from '../config/queue';
 import { QUEUE_NAMES } from '../config/queue';
-import { PublishAdJobPayload } from '@shared/types';
+import { PublishAdJobPayload } from '../types/shared';
 import { logger } from '../utils/logger';
 
 const EDITABLE_STATUSES = [AdStatus.DRAFT, AdStatus.REJECTED];
