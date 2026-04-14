@@ -36,7 +36,7 @@ export class AdService {
     const ad = await adRepository.findById(id);
     if (!ad) throw new NotFoundError('Ad');
     if (!isAdmin && ad.userId !== userId) throw new ForbiddenError();
-    if (!isAdmin && !EDITABLE_STATUSES.includes(ad.status)) {
+    if (!isAdmin && !EDITABLE_STATUSES.includes(ad.status as any)) {
       throw new ValidationError(`Cannot edit ad with status: ${ad.status}. Only DRAFT or REJECTED ads can be edited.`);
     }
     return adRepository.update(id, data);
@@ -46,7 +46,7 @@ export class AdService {
     const ad = await adRepository.findById(id);
     if (!ad) throw new NotFoundError('Ad');
     if (!isAdmin && ad.userId !== userId) throw new ForbiddenError();
-    if (ad.status !== AdStatus.DRAFT) {
+    if (ad.status as any !== AdStatus.DRAFT) {
       throw new ValidationError('Only DRAFT ads can be deleted');
     }
     await adRepository.delete(id);
@@ -55,7 +55,7 @@ export class AdService {
   async submitAd(id: string, userId: string) {
     const ad = await adRepository.findByIdAndUserId(id, userId);
     if (!ad) throw new NotFoundError('Ad');
-    if (!EDITABLE_STATUSES.includes(ad.status)) {
+    if (!EDITABLE_STATUSES.includes(ad.status as any)) {
       throw new ValidationError(`Ad cannot be submitted from status: ${ad.status}`);
     }
 
@@ -78,7 +78,7 @@ export class AdService {
   async approveAd(id: string, adminId: string) {
     const ad = await adRepository.findById(id);
     if (!ad) throw new NotFoundError('Ad');
-    if (ad.status !== AdStatus.PENDING) {
+    if (ad.status as any !== AdStatus.PENDING) {
       throw new ValidationError(`Ad is not pending approval (status: ${ad.status})`);
     }
 
@@ -102,7 +102,7 @@ export class AdService {
   async rejectAd(id: string, adminId: string, reason: string) {
     const ad = await adRepository.findById(id);
     if (!ad) throw new NotFoundError('Ad');
-    if (ad.status !== AdStatus.PENDING) {
+    if (ad.status as any !== AdStatus.PENDING) {
       throw new ValidationError(`Ad is not pending review (status: ${ad.status})`);
     }
     if (!reason?.trim()) throw new ValidationError('Rejection reason is required');
