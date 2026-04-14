@@ -35,7 +35,7 @@ export class AdRepository {
     params: { page: number; limit: number; status?: AdStatus }
   ) {
     const where: Prisma.AdWhereInput = { userId };
-    if (params.status) where.status = params.status;
+    if (params.status) where.status = params.status as any;
 
     const [data, total] = await Promise.all([
       prisma.ad.findMany({
@@ -53,7 +53,7 @@ export class AdRepository {
 
   async findAll(params: { page: number; limit: number; status?: AdStatus; search?: string }) {
     const where: Prisma.AdWhereInput = {};
-    if (params.status) where.status = params.status;
+    if (params.status) where.status = params.status as any;
     if (params.search) {
       where.OR = [
         { headline: { contains: params.search, mode: 'insensitive' } },
@@ -79,7 +79,7 @@ export class AdRepository {
 
   async findPendingAds() {
     return prisma.ad.findMany({
-      where: { status: AdStatus.PENDING },
+      where: { status: AdStatus.PENDING as any },
       ...adWithRelations,
       orderBy: { createdAt: 'asc' },
     });
@@ -87,7 +87,7 @@ export class AdRepository {
 
   async findPublishedAds() {
     return prisma.ad.findMany({
-      where: { status: AdStatus.PUBLISHED },
+      where: { status: AdStatus.PUBLISHED as any },
       select: { id: true, metaAdId: true, metaCampaignId: true },
     });
   }
@@ -114,7 +114,7 @@ export class AdRepository {
   async updateStatus(id: string, status: AdStatus, extra?: Prisma.AdUpdateInput) {
     return prisma.ad.update({
       where: { id },
-      data: { status, ...extra },
+      data: { status: status as any, ...extra },
       ...adWithRelations,
     });
   }

@@ -1,6 +1,42 @@
-// Re-export Prisma enums so they are compatible everywhere
-export { UserRole, AdStatus, CampaignObjective, BudgetType, CtaType } from '@prisma/client';
-import { UserRole, AdStatus, CtaType, CampaignObjective, BudgetType } from '@prisma/client';
+// ─── Enums (must match Prisma schema exactly) ─────────────────────────────────
+
+export enum UserRole {
+  CLIENT = 'CLIENT',
+  ADMIN = 'ADMIN',
+}
+
+export enum AdStatus {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  PUBLISHING = 'PUBLISHING',
+  PUBLISHED = 'PUBLISHED',
+  PAUSED = 'PAUSED',
+  FAILED = 'FAILED',
+}
+
+export enum CampaignObjective {
+  TRAFFIC = 'TRAFFIC',
+  AWARENESS = 'AWARENESS',
+  SALES = 'SALES',
+  LEAD_GENERATION = 'LEAD_GENERATION',
+}
+
+export enum BudgetType {
+  DAILY = 'DAILY',
+  LIFETIME = 'LIFETIME',
+}
+
+export enum CtaType {
+  LEARN_MORE = 'LEARN_MORE',
+  SHOP_NOW = 'SHOP_NOW',
+  SIGN_UP = 'SIGN_UP',
+  GET_OFFER = 'GET_OFFER',
+  BOOK_NOW = 'BOOK_NOW',
+  CONTACT_US = 'CONTACT_US',
+  DOWNLOAD = 'DOWNLOAD',
+}
 
 export enum Placement {
   AUTOMATIC = 'AUTOMATIC',

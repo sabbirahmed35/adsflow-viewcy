@@ -19,11 +19,11 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email, passwordHash, role: UserRole.CLIENT },
+      data: { name, email, passwordHash, role: UserRole.CLIENT as any },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    const tokens = await this.generateTokens(user.id, user.email, user.role as any);
     return { user, ...tokens };
   }
 
@@ -34,7 +34,7 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new AppError(401, 'Invalid email or password');
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    const tokens = await this.generateTokens(user.id, user.email, user.role as any);
     const { passwordHash: _, ...safeUser } = user;
     return { user: safeUser, ...tokens };
   }
@@ -57,7 +57,7 @@ export class AuthService {
 
     // Rotate refresh token
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    const tokens = await this.generateTokens(user.id, user.email, user.role as any);
     const { passwordHash: _, ...safeUser } = user;
     return { user: safeUser, ...tokens };
   }
