@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'adflow-auth',
-      partialState: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state: AuthState) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     } as any
   )
 );
