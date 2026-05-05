@@ -172,7 +172,7 @@ export class MetaService {
     const objectStorySpec =
       params.creativeType === 'VIDEO'
         ? {
-            page_id: config.meta.appId,
+            page_id: config.meta.pageId,
             video_data: {
               video_url: params.creativeUrl,
               message: params.primaryText,
@@ -181,7 +181,7 @@ export class MetaService {
             },
           }
         : {
-            page_id: config.meta.appId,
+            page_id: config.meta.pageId,
             link_data: {
               link: params.websiteUrl,
               message: params.primaryText,

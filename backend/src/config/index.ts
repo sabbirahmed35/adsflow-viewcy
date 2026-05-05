@@ -46,6 +46,7 @@ export const config = {
     accessToken: optional('META_ACCESS_TOKEN', ''),
     adAccountId: optional('META_AD_ACCOUNT_ID', ''),
     apiVersion: optional('META_API_VERSION', 'v20.0'),
+    pageId: optional('META_PAGE_ID', ''),
   },
 
   anthropic: {
