@@ -13,6 +13,7 @@ import { logger } from './utils/logger';
 import { authRouter, adRouter, adminRouter, aiRouter, uploadRouter, webhookRouter } from './routes';
 
 const app = express();
+app.set('trust proxy', 1); // Trust Railway's proxy
 
 // ─── Security ─────────────────────────────────────────────────────────────────
 app.use(helmet());
