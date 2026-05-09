@@ -140,6 +140,7 @@ export class MetaService {
       targeting,
       optimization_goal: 'LINK_CLICKS',
       billing_event: 'IMPRESSIONS',
+      bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
       [budgetKey]: Math.round(params.budgetAmount * 100), // cents
       status: 'PAUSED',
     };
