@@ -168,16 +168,25 @@ export class MetaService {
   }
 
   private async getVideoThumbnail(videoId: string): Promise<string | null> {
-    try {
-      const res = await metaRequest<{ thumbnails: { data: Array<{ uri: string; is_preferred: boolean }> } }>(
-        'GET', `/${videoId}`, { fields: 'thumbnails' }
-      );
-      const thumbs = res.thumbnails?.data || [];
-      const preferred = thumbs.find((t: any) => t.is_preferred) || thumbs[0];
-      return preferred?.uri || null;
-    } catch {
-      return null;
+    // Retry up to 5 times with 3s delay - Meta needs time to process video
+    for (let i = 0; i < 5; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      try {
+        const res = await metaRequest<{ thumbnails: { data: Array<{ uri: string; is_preferred: boolean }> } }>(
+          'GET', `/${videoId}`, { fields: 'thumbnails' }
+        );
+        const thumbs = res.thumbnails?.data || [];
+        if (thumbs.length > 0) {
+          const preferred = thumbs.find((t: any) => t.is_preferred) || thumbs[0];
+          logger.debug('Got video thumbnail', { videoId, attempt: i + 1 });
+          return preferred?.uri || null;
+        }
+        logger.debug('No thumbnails yet, retrying...', { videoId, attempt: i + 1 });
+      } catch {
+        logger.debug('Thumbnail fetch failed, retrying...', { videoId, attempt: i + 1 });
+      }
     }
+    return null;
   }
 
   private async createCreative(params: PublishAdParams): Promise<string> {
@@ -191,18 +200,18 @@ export class MetaService {
       const videoId = await this.uploadVideo(params.creativeUrl, params.headline);
       // Get thumbnail for the video
       const thumbnailUrl = await this.getVideoThumbnail(videoId);
-      const videoData: Record<string, unknown> = {
-        video_id: videoId,
-        message: params.primaryText,
-        title: params.headline,
-        call_to_action: { type: cta, value: { link: params.websiteUrl } },
-      };
-      if (thumbnailUrl) {
-        videoData.image_url = thumbnailUrl;
+      if (!thumbnailUrl) {
+        throw new Error('Could not get video thumbnail from Meta. Please try again in a few minutes.');
       }
       objectStorySpec = {
         page_id: pageId,
-        video_data: videoData,
+        video_data: {
+          video_id: videoId,
+          image_url: thumbnailUrl,
+          message: params.primaryText,
+          title: params.headline,
+          call_to_action: { type: cta, value: { link: params.websiteUrl } },
+        },
       };
     } else {
       objectStorySpec = {
