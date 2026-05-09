@@ -167,23 +167,31 @@ export class MetaService {
     return res.id;
   }
 
-  private async getVideoThumbnail(videoId: string): Promise<string | null> {
-    // Retry up to 5 times with 3s delay - Meta needs time to process video
-    for (let i = 0; i < 5; i++) {
-      await new Promise(r => setTimeout(r, 3000));
+  private async waitForVideoReady(videoId: string): Promise<string | null> {
+    // Wait for video to finish processing and get thumbnail
+    // Retry up to 10 times with 5s delay = up to 50 seconds
+    for (let i = 0; i < 10; i++) {
+      await new Promise(r => setTimeout(r, 5000));
       try {
-        const res = await metaRequest<{ thumbnails: { data: Array<{ uri: string; is_preferred: boolean }> } }>(
-          'GET', `/${videoId}`, { fields: 'thumbnails' }
-        );
+        const res = await metaRequest<{
+          status: { processing_progress: number; video_status: string };
+          thumbnails: { data: Array<{ uri: string; is_preferred: boolean }> };
+        }>('GET', `/${videoId}`, { fields: 'status,thumbnails' });
+
+        const status = res.status?.video_status;
         const thumbs = res.thumbnails?.data || [];
-        if (thumbs.length > 0) {
+
+        logger.debug('Video status check', { videoId, status, attempt: i + 1 });
+
+        if (status === 'ready' && thumbs.length > 0) {
           const preferred = thumbs.find((t: any) => t.is_preferred) || thumbs[0];
-          logger.debug('Got video thumbnail', { videoId, attempt: i + 1 });
+          logger.debug('Video ready with thumbnail', { videoId, attempt: i + 1 });
           return preferred?.uri || null;
         }
-        logger.debug('No thumbnails yet, retrying...', { videoId, attempt: i + 1 });
+
+        logger.debug('Video not ready yet, retrying...', { videoId, status, attempt: i + 1 });
       } catch {
-        logger.debug('Thumbnail fetch failed, retrying...', { videoId, attempt: i + 1 });
+        logger.debug('Video status check failed, retrying...', { videoId, attempt: i + 1 });
       }
     }
     return null;
@@ -199,7 +207,7 @@ export class MetaService {
       // Upload video to Meta first to get video_id
       const videoId = await this.uploadVideo(params.creativeUrl, params.headline);
       // Get thumbnail for the video
-      const thumbnailUrl = await this.getVideoThumbnail(videoId);
+      const thumbnailUrl = await this.waitForVideoReady(videoId);
       if (!thumbnailUrl) {
         throw new Error('Could not get video thumbnail from Meta. Please try again in a few minutes.');
       }
