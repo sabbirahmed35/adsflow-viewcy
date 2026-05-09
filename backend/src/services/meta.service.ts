@@ -131,17 +131,6 @@ export class MetaService {
       },
     };
 
-    if (params.interests.length) {
-      targeting.flexible_spec = [
-        {
-          interests: params.interests.slice(0, 5).map((name, i) => ({
-            id: String(6003623684364 + i),
-            name,
-          })),
-        },
-      ];
-    }
-
     const budgetKey =
       params.budgetType === 'DAILY' ? 'daily_budget' : 'lifetime_budget';
 
@@ -149,10 +138,10 @@ export class MetaService {
       name: `AdFlow AdSet — ${params.headline}`,
       campaign_id: campaignId,
       targeting,
-      optimization_goal: 'OFFSITE_CONVERSIONS',
+      optimization_goal: 'LINK_CLICKS',
       billing_event: 'IMPRESSIONS',
       [budgetKey]: Math.round(params.budgetAmount * 100), // cents
-      status: 'ACTIVE',
+      status: 'PAUSED',
     };
 
     if (params.startDate) {
