@@ -161,15 +161,33 @@ export function useRegenerateCopy() {
 export function useUploadCreative() {
   return useMutation({
     mutationFn: async (file: File) => {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await api.post<{
+      // Step 1: Get presigned URL from backend
+      const presignedRes = await api.post<{
         success: boolean;
-        data: { url: string; key: string; type: 'IMAGE' | 'VIDEO' };
-      }>('/upload/creative', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        data: { url: string; key: string };
+      }>('/upload/presigned-url', {
+        fileName: file.name,
+        mimeType: file.type,
       });
-      return res.data.data;
+
+      const { url, key } = presignedRes.data.data;
+
+      // Step 2: Upload directly to S3 (bypasses backend timeout)
+      await fetch(url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+
+      // Step 3: Build public URL
+      const isVideo = file.type.startsWith('video/');
+      const publicUrl = url.split('?')[0]; // Remove query params from presigned URL
+
+      return {
+        url: publicUrl,
+        key,
+        type: (isVideo ? 'VIDEO' : 'IMAGE') as 'IMAGE' | 'VIDEO',
+      };
     },
   });
 }
