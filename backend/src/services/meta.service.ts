@@ -157,32 +157,47 @@ export class MetaService {
     return res.id;
   }
 
+  private async uploadVideo(videoUrl: string, name: string): Promise<string> {
+    // Upload video to Meta by providing the file URL
+    const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/advideos`, {
+      name: `AdFlow Video — ${name}`,
+      file_url: videoUrl,
+    });
+    logger.debug('Video uploaded to Meta', { id: res.id });
+    return res.id;
+  }
+
   private async createCreative(params: PublishAdParams): Promise<string> {
     const cta = CTA_MAP[params.cta] ?? 'LEARN_MORE';
-    const domain = new URL(params.websiteUrl).hostname;
+    const pageId = config.meta.pageId || config.meta.appId;
 
-    const objectStorySpec =
-      params.creativeType === 'VIDEO'
-        ? {
-            page_id: config.meta.appId,
-            video_data: {
-              video_url: params.creativeUrl,
-              message: params.primaryText,
-              title: params.headline,
-              call_to_action: { type: cta, value: { link: params.websiteUrl } },
-            },
-          }
-        : {
-            page_id: config.meta.appId,
-            link_data: {
-              link: params.websiteUrl,
-              message: params.primaryText,
-              name: params.headline,
-              description: params.description,
-              image_url: params.creativeUrl,
-              call_to_action: { type: cta, value: { link: params.websiteUrl } },
-            },
-          };
+    let objectStorySpec: Record<string, unknown>;
+
+    if (params.creativeType === 'VIDEO' && params.creativeUrl) {
+      // Upload video to Meta first to get video_id
+      const videoId = await this.uploadVideo(params.creativeUrl, params.headline);
+      objectStorySpec = {
+        page_id: pageId,
+        video_data: {
+          video_id: videoId,
+          message: params.primaryText,
+          title: params.headline,
+          call_to_action: { type: cta, value: { link: params.websiteUrl } },
+        },
+      };
+    } else {
+      objectStorySpec = {
+        page_id: pageId,
+        link_data: {
+          link: params.websiteUrl,
+          message: params.primaryText,
+          name: params.headline,
+          description: params.description,
+          image_url: params.creativeUrl,
+          call_to_action: { type: cta, value: { link: params.websiteUrl } },
+        },
+      };
+    }
 
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/adcreatives`, {
       name: `AdFlow Creative — ${params.headline}`,
