@@ -35,7 +35,7 @@ async function metaRequest<T extends object>(
 
   if (!res.ok || 'error' in data) {
     const err = (data as MetaApiError).error;
-    logger.error('Meta API error', { path, code: err?.code, message: err?.message });
+    logger.error('Meta API error', { path, code: err?.code, message: err?.message, full: JSON.stringify(data) });
     throw new AppError(502, `Meta API error: ${err?.message || 'Unknown error'}`);
   }
 
@@ -113,8 +113,9 @@ export class MetaService {
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/campaigns`, {
       name: `AdFlow — ${params.headline} — ${new Date().toISOString()}`,
       objective,
-      status: 'ACTIVE',
+      status: 'PAUSED',
       special_ad_categories: [],
+      buying_type: 'AUCTION',
     });
     logger.debug('Campaign created', { id: res.id });
     return res.id;
