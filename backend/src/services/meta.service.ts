@@ -167,6 +167,19 @@ export class MetaService {
     return res.id;
   }
 
+  private async getVideoThumbnail(videoId: string): Promise<string | null> {
+    try {
+      const res = await metaRequest<{ thumbnails: { data: Array<{ uri: string; is_preferred: boolean }> } }>(
+        'GET', `/${videoId}`, { fields: 'thumbnails' }
+      );
+      const thumbs = res.thumbnails?.data || [];
+      const preferred = thumbs.find((t: any) => t.is_preferred) || thumbs[0];
+      return preferred?.uri || null;
+    } catch {
+      return null;
+    }
+  }
+
   private async createCreative(params: PublishAdParams): Promise<string> {
     const cta = CTA_MAP[params.cta] ?? 'LEARN_MORE';
     const pageId = config.meta.pageId || config.meta.appId;
@@ -176,14 +189,20 @@ export class MetaService {
     if (params.creativeType === 'VIDEO' && params.creativeUrl) {
       // Upload video to Meta first to get video_id
       const videoId = await this.uploadVideo(params.creativeUrl, params.headline);
+      // Get thumbnail for the video
+      const thumbnailUrl = await this.getVideoThumbnail(videoId);
+      const videoData: Record<string, unknown> = {
+        video_id: videoId,
+        message: params.primaryText,
+        title: params.headline,
+        call_to_action: { type: cta, value: { link: params.websiteUrl } },
+      };
+      if (thumbnailUrl) {
+        videoData.image_url = thumbnailUrl;
+      }
       objectStorySpec = {
         page_id: pageId,
-        video_data: {
-          video_id: videoId,
-          message: params.primaryText,
-          title: params.headline,
-          call_to_action: { type: cta, value: { link: params.websiteUrl } },
-        },
+        video_data: videoData,
       };
     } else {
       objectStorySpec = {
