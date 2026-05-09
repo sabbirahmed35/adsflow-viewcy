@@ -70,10 +70,10 @@ export interface PublishAdParams {
 
 // Map our objectives to Meta's
 const OBJECTIVE_MAP: Record<string, string> = {
-  TRAFFIC: 'LINK_CLICKS',
-  AWARENESS: 'BRAND_AWARENESS',
-  SALES: 'CONVERSIONS',
-  LEAD_GENERATION: 'LEAD_GENERATION',
+  TRAFFIC: 'OUTCOME_TRAFFIC',
+  AWARENESS: 'OUTCOME_AWARENESS',
+  SALES: 'OUTCOME_SALES',
+  LEAD_GENERATION: 'OUTCOME_LEADS',
 };
 
 // Map our CTA to Meta's
@@ -109,7 +109,7 @@ export class MetaService {
   }
 
   private async createCampaign(params: PublishAdParams): Promise<string> {
-    const objective = OBJECTIVE_MAP[params.objective] ?? 'LINK_CLICKS';
+    const objective = OBJECTIVE_MAP[params.objective] ?? 'OUTCOME_TRAFFIC';
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/campaigns`, {
       name: `AdFlow — ${params.headline} — ${new Date().toISOString()}`,
       objective,
@@ -147,7 +147,7 @@ export class MetaService {
       name: `AdFlow AdSet — ${params.headline}`,
       campaign_id: campaignId,
       targeting,
-      optimization_goal: 'LINK_CLICKS',
+      optimization_goal: 'OFFSITE_CONVERSIONS',
       billing_event: 'IMPRESSIONS',
       [budgetKey]: Math.round(params.budgetAmount * 100), // cents
       status: 'ACTIVE',
@@ -172,7 +172,7 @@ export class MetaService {
     const objectStorySpec =
       params.creativeType === 'VIDEO'
         ? {
-            page_id: config.meta.pageId,
+            page_id: config.meta.appId,
             video_data: {
               video_url: params.creativeUrl,
               message: params.primaryText,
@@ -181,7 +181,7 @@ export class MetaService {
             },
           }
         : {
-            page_id: config.meta.pageId,
+            page_id: config.meta.appId,
             link_data: {
               link: params.websiteUrl,
               message: params.primaryText,
