@@ -116,6 +116,7 @@ export class MetaService {
       status: 'PAUSED',
       special_ad_categories: [],
       buying_type: 'AUCTION',
+      is_adset_budget_sharing_enabled: false,
     });
     logger.debug('Campaign created', { id: res.id });
     return res.id;
