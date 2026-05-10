@@ -292,14 +292,18 @@ export class MetaService {
 
   private countryToCode(country: string): string {
     const map: Record<string, string> = {
-      'United States': 'US',
-      'Canada': 'CA',
-      'United Kingdom': 'GB',
-      'Australia': 'AU',
-      'Germany': 'DE',
-      'France': 'FR',
-      'Global': 'US',
+      'United States': 'US', 'United Kingdom': 'GB', 'Canada': 'CA',
+      'Australia': 'AU', 'Germany': 'DE', 'France': 'FR', 'India': 'IN',
+      'Brazil': 'BR', 'Japan': 'JP', 'Mexico': 'MX', 'Nigeria': 'NG',
+      'South Africa': 'ZA', 'United Arab Emirates': 'AE', 'Singapore': 'SG',
+      'Netherlands': 'NL', 'Spain': 'ES', 'Italy': 'IT', 'Pakistan': 'PK',
+      'Bangladesh': 'BD', 'Philippines': 'PH', 'Indonesia': 'ID',
+      'Turkey': 'TR', 'Saudi Arabia': 'SA', 'Egypt': 'EG', 'Kenya': 'KE',
+      'Ghana': 'GH', 'Argentina': 'AR', 'Colombia': 'CO', 'Malaysia': 'MY',
+      'Thailand': 'TH', 'Global': 'US',
     };
+    // If already a 2-letter code, return as-is
+    if (country.length === 2) return country.toUpperCase();
     return map[country] ?? country.substring(0, 2).toUpperCase();
   }
 }

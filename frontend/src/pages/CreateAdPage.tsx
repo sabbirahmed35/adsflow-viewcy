@@ -9,6 +9,35 @@ import { getErrorMessage } from '../lib/api';
 import clsx from 'clsx';
 import { UploadCloud, RefreshCw, CheckCircle, AlertCircle, X } from 'lucide-react';
 
+// ─── Ad type config ───────────────────────────────────────────────────────────
+const AD_TYPES = [
+  {
+    id: CampaignObjective.TRAFFIC,
+    label: 'Traffic',
+    icon: Zap,
+    color: 'indigo',
+    description: 'Drive visitors to your website or landing page',
+    badge: 'Most Popular',
+  },
+  {
+    id: CampaignObjective.SALES,
+    label: 'Sales',
+    icon: ShoppingBag,
+    color: 'emerald',
+    description: 'Increase conversions and purchases',
+    badge: null,
+  },
+  {
+    id: CampaignObjective.AWARENESS,
+    label: 'Awareness',
+    icon: Eye,
+    color: 'violet',
+    description: 'Reach more people and grow brand recognition',
+    badge: null,
+  },
+];
+
+
 // ─── Step indicator ───────────────────────────────────────────────────────────
 function Steps({ current }: { current: number }) {
   const steps = ['Ad details', 'AI copy', 'Campaign setup', 'Review & submit'];
@@ -80,6 +109,139 @@ function TagInput({ value, onChange, placeholder }: {
   );
 }
 
+// ─── Location picker ─────────────────────────────────────────────────────────
+const POPULAR_LOCATIONS = [
+  { key: 'US', name: 'United States', type: 'country', flag: '🇺🇸' },
+  { key: 'GB', name: 'United Kingdom', type: 'country', flag: '🇬🇧' },
+  { key: 'CA', name: 'Canada', type: 'country', flag: '🇨🇦' },
+  { key: 'AU', name: 'Australia', type: 'country', flag: '🇦🇺' },
+  { key: 'DE', name: 'Germany', type: 'country', flag: '🇩🇪' },
+  { key: 'FR', name: 'France', type: 'country', flag: '🇫🇷' },
+  { key: 'IN', name: 'India', type: 'country', flag: '🇮🇳' },
+  { key: 'BR', name: 'Brazil', type: 'country', flag: '🇧🇷' },
+  { key: 'JP', name: 'Japan', type: 'country', flag: '🇯🇵' },
+  { key: 'MX', name: 'Mexico', type: 'country', flag: '🇲🇽' },
+  { key: 'NG', name: 'Nigeria', type: 'country', flag: '🇳🇬' },
+  { key: 'ZA', name: 'South Africa', type: 'country', flag: '🇿🇦' },
+  { key: 'AE', name: 'United Arab Emirates', type: 'country', flag: '🇦🇪' },
+  { key: 'SG', name: 'Singapore', type: 'country', flag: '🇸🇬' },
+  { key: 'NL', name: 'Netherlands', type: 'country', flag: '🇳🇱' },
+  { key: 'ES', name: 'Spain', type: 'country', flag: '🇪🇸' },
+  { key: 'IT', name: 'Italy', type: 'country', flag: '🇮🇹' },
+  { key: 'PK', name: 'Pakistan', type: 'country', flag: '🇵🇰' },
+  { key: 'BD', name: 'Bangladesh', type: 'country', flag: '🇧🇩' },
+  { key: 'PH', name: 'Philippines', type: 'country', flag: '🇵🇭' },
+  { key: 'ID', name: 'Indonesia', type: 'country', flag: '🇮🇩' },
+  { key: 'TR', name: 'Turkey', type: 'country', flag: '🇹🇷' },
+  { key: 'SA', name: 'Saudi Arabia', type: 'country', flag: '🇸🇦' },
+  { key: 'EG', name: 'Egypt', type: 'country', flag: '🇪🇬' },
+  { key: 'KE', name: 'Kenya', type: 'country', flag: '🇰🇪' },
+  { key: 'GH', name: 'Ghana', type: 'country', flag: '🇬🇭' },
+  { key: 'AR', name: 'Argentina', type: 'country', flag: '🇦🇷' },
+  { key: 'CO', name: 'Colombia', type: 'country', flag: '🇨🇴' },
+  { key: 'MY', name: 'Malaysia', type: 'country', flag: '🇲🇾' },
+  { key: 'TH', name: 'Thailand', type: 'country', flag: '🇹🇭' },
+];
+
+interface Location { key: string; name: string; type: string; flag?: string; }
+
+function LocationPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [search, setSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const filtered = search.trim().length > 0
+    ? POPULAR_LOCATIONS.filter(l =>
+        l.name.toLowerCase().includes(search.toLowerCase()) ||
+        l.key.toLowerCase().includes(search.toLowerCase())
+      )
+    : POPULAR_LOCATIONS;
+
+  const addLocation = (loc: Location) => {
+    if (!value.includes(loc.name)) {
+      onChange([...value, loc.name]);
+    }
+    setSearch('');
+    setShowDropdown(false);
+  };
+
+  const removeLocation = (name: string) => {
+    onChange(value.filter(v => v !== name));
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* Selected locations */}
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((loc) => {
+            const found = POPULAR_LOCATIONS.find(l => l.name === loc);
+            return (
+              <span key={loc} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">
+                {found?.flag && <span>{found.flag}</span>}
+                {loc}
+                <button
+                  type="button"
+                  onClick={() => removeLocation(loc)}
+                  className="hover:text-indigo-900 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Search input */}
+      <div className="relative">
+        <input
+          className="input pr-8"
+          placeholder="Search country or region…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setShowDropdown(true); }}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+
+        {/* Dropdown */}
+        {showDropdown && (
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-sm text-gray-400 p-3 text-center">No results found</p>
+            ) : (
+              filtered.map((loc) => {
+                const isSelected = value.includes(loc.name);
+                return (
+                  <button
+                    key={loc.key}
+                    type="button"
+                    onMouseDown={() => addLocation(loc)}
+                    className={clsx(
+                      'w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors',
+                      isSelected && 'opacity-40 cursor-not-allowed'
+                    )}
+                    disabled={isSelected}
+                  >
+                    <span className="text-base">{loc.flag}</span>
+                    <span className="flex-1 text-gray-800">{loc.name}</span>
+                    <span className="text-xs text-gray-400 font-mono">{loc.key}</span>
+                    {isSelected && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
+      {!value.length && (
+        <p className="text-xs text-gray-400">Search and select one or more countries or regions</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 export function CreateAdPage() {
   const navigate = useNavigate();
@@ -89,7 +251,8 @@ export function CreateAdPage() {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [uploadedType, setUploadedType] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [interests, setInterests] = useState(['Technology', 'Business']);
-  const [locations, setLocations] = useState(['United States']);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [selectedAdType, setSelectedAdType] = useState<CampaignObjective>(CampaignObjective.TRAFFIC);
 
   const { register, watch, setValue, getValues } = useForm({
     defaultValues: {
@@ -124,6 +287,8 @@ export function CreateAdPage() {
   const handleGenerate = async () => {
     setError('');
     if (!url) { setError('Please enter a URL'); return; }
+    // Set objective from selected ad type
+    setValue('objective', selectedAdType);
     try {
       const result = await generateCopy.mutateAsync({ url });
       setValue('primaryText', result.copy.primaryText);
@@ -213,89 +378,96 @@ export function CreateAdPage() {
 
         {/* ── STEP 1 ─────────────────────────────────────────────────────── */}
         {step === 1 && (
-          <div className="grid grid-cols-2 gap-6">
-            <div className="card p-5 space-y-4">
-              <h3 className="font-semibold text-gray-900">Ad details</h3>
-              <div>
-                <label className="label">Website / event URL *</label>
-                <input
-                  {...register('url')}
-                  type="url"
-                  className="input"
-                  placeholder="https://yourbusiness.com/product"
-                />
-              </div>
-              <div>
-                <label className="label">Upload creative (image or video)</label>
-                <label
-                  className={clsx(
-                    'flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors',
-                    uploadedUrl
-                      ? 'border-emerald-400 bg-emerald-50'
-                      : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
-                  )}
-                >
+          <div className="space-y-6">
+
+
+
+            {/* ── URL + Upload ──────────────────────────────────────────── */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="card p-5 space-y-4">
+                <h3 className="font-semibold text-gray-900">Ad details</h3>
+                <div>
+                  <label className="label">Website / event URL *</label>
                   <input
-                    type="file"
-                    accept="image/*,video/*"
-                    className="hidden"
-                    onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                    {...register('url')}
+                    type="url"
+                    className="input"
+                    placeholder="https://yourbusiness.com/product"
                   />
-                  {uploadCreative.isPending ? (
-                    <Spinner />
-                  ) : uploadedUrl ? (
-                    <>
-                      <CheckCircle className="w-8 h-8 text-emerald-500" />
-                      <span className="text-sm text-emerald-700 font-medium">Creative uploaded</span>
-                    </>
-                  ) : (
-                    <>
-                      <UploadCloud className="w-8 h-8 text-gray-300" />
-                      <span className="text-sm text-gray-500">Click to upload image or video</span>
-                      <span className="text-xs text-gray-400">JPG, PNG, MP4 — max 30 MB</span>
-                    </>
-                  )}
-                </label>
-                {uploadedUrl && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-100 h-28">
-                    {uploadedType === 'IMAGE' ? (
-                      <img src={uploadedUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <video src={uploadedUrl} className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                )}
-              </div>
-              <button
-                className="btn btn-primary w-full justify-center"
-                onClick={handleGenerate}
-                disabled={generateCopy.isPending}
-              >
-                {generateCopy.isPending ? (
-                  <><Spinner className="w-4 h-4" /> Extracting & generating copy…</>
-                ) : (
-                  'Generate AI copy →'
-                )}
-              </button>
-            </div>
-            <div className="card p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">How it works</h3>
-              {[
-                ['Paste your URL', 'We extract the page title, description, and metadata'],
-                ['AI generates copy', 'Claude writes primary text, headline, and description'],
-                ['Set up campaign', 'Configure budget, audience, objective, and placements'],
-                ['Submit for review', 'Admin approves and it automatically publishes to Meta'],
-              ].map(([title, desc], i) => (
-                <div key={i} className="flex gap-3 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                  </div>
                 </div>
-              ))}
+                <div>
+                  <label className="label">Upload creative (image or video)</label>
+                  <label
+                    className={clsx(
+                      'flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors',
+                      uploadedUrl
+                        ? 'border-emerald-400 bg-emerald-50'
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                    )}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                    />
+                    {uploadCreative.isPending ? (
+                      <Spinner />
+                    ) : uploadedUrl ? (
+                      <>
+                        <CheckCircle className="w-8 h-8 text-emerald-500" />
+                        <span className="text-sm text-emerald-700 font-medium">Creative uploaded</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-8 h-8 text-gray-300" />
+                        <span className="text-sm text-gray-500">Click to upload image or video</span>
+                        <span className="text-xs text-gray-400">JPG, PNG, MP4 — max 30 MB</span>
+                      </>
+                    )}
+                  </label>
+                  {uploadedUrl && (
+                    <div className="mt-2 rounded-lg overflow-hidden border border-gray-100 h-28">
+                      {uploadedType === 'IMAGE' ? (
+                        <img src={uploadedUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <video src={uploadedUrl} className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="btn btn-primary w-full justify-center"
+                  onClick={handleGenerate}
+                  disabled={generateCopy.isPending}
+                >
+                  {generateCopy.isPending ? (
+                    <><Spinner className="w-4 h-4" /> Extracting & generating copy…</>
+                  ) : (
+                    'Generate AI copy →'
+                  )}
+                </button>
+              </div>
+
+              <div className="card p-5">
+                <h3 className="font-semibold text-gray-900 mb-4">How it works</h3>
+                {[
+                  ['Choose ad type', 'Select your campaign goal — traffic, sales, or awareness'],
+                  ['Paste your URL', 'We extract the page title, description, and metadata'],
+                  ['AI generates copy', 'Claude writes primary text, headline, and description'],
+                  ['Submit for review', 'Admin approves and it automatically publishes to Meta'],
+                ].map(([title, desc], i) => (
+                  <div key={i} className="flex gap-3 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold flex items-center justify-center flex-shrink-0 mt-0.5">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -406,7 +578,7 @@ export function CreateAdPage() {
 
               <div>
                 <label className="label">Locations</label>
-                <TagInput value={locations} onChange={setLocations} placeholder="Add country or city…" />
+                <LocationPicker value={locations} onChange={setLocations} />
               </div>
 
               <div>
@@ -485,6 +657,7 @@ export function CreateAdPage() {
                 <h3 className="font-semibold text-gray-900 mb-4">Summary</h3>
                 <dl className="space-y-2 text-sm">
                   {[
+                    ['Ad Type', AD_TYPES.find(t => t.id === selectedAdType)?.label ?? selectedAdType],
                     ['URL', vals.url],
                     ['Headline', vals.headline],
                     ['CTA', vals.cta?.replace(/_/g, ' ')],
