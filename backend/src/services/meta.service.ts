@@ -251,7 +251,7 @@ export class MetaService {
 
     if (config.meta.pixelId) {
       adBody.tracking_specs = [{
-        action: ['offsite_conversion'],
+        'action.type': ['offsite_conversion'],
         fb_pixel: [config.meta.pixelId],
       }];
     }
