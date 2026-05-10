@@ -242,12 +242,21 @@ export class MetaService {
   }
 
   private async createAd(adSetId: string, creativeId: string, name: string): Promise<string> {
-    const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/ads`, {
+    const adBody: Record<string, unknown> = {
       name: `AdFlow Ad — ${name}`,
       adset_id: adSetId,
       creative: { creative_id: creativeId },
       status: 'ACTIVE',
-    });
+    };
+
+    if (config.meta.pixelId) {
+      adBody.tracking_specs = [{
+        action: ['offsite_conversion'],
+        fb_pixel: [config.meta.pixelId],
+      }];
+    }
+
+    const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/ads`, adBody);
     logger.debug('Ad created', { id: res.id });
     return res.id;
   }
