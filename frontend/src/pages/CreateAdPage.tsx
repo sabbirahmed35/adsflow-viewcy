@@ -8,6 +8,7 @@ import { CampaignObjective, BudgetType, CtaType, Placement } from '@shared/types
 import { getErrorMessage } from '../lib/api';
 import clsx from 'clsx';
 import { UploadCloud, RefreshCw, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { MapLocationPicker, PinnedLocation } from '../components/ui/MapLocationPicker';
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 function Steps({ current }: { current: number }) {
@@ -89,7 +90,8 @@ export function CreateAdPage() {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [uploadedType, setUploadedType] = useState<'IMAGE' | 'VIDEO'>('IMAGE');
   const [interests, setInterests] = useState(['Technology', 'Business']);
-  const [locations, setLocations] = useState(['United States']);
+  const [locations, setLocations] = useState<string[]>(['United States']);
+  const [pinnedLocations, setPinnedLocations] = useState<PinnedLocation[]>([]);
   const [selectedAdType, setSelectedAdType] = useState<CampaignObjective>(CampaignObjective.TRAFFIC);
 
   const { register, watch, setValue, getValues } = useForm({
@@ -172,7 +174,9 @@ export function CreateAdPage() {
       budgetAmount: Number(vals.budgetAmount),
       ageMin: Number(vals.ageMin),
       ageMax: Number(vals.ageMax),
-      locations,
+      locations: pinnedLocations.length > 0
+        ? pinnedLocations.map(p => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}+${p.radiusMiles}mi`)
+        : locations,
       interests,
       placements: [vals.placements].flat(),
     };
@@ -420,7 +424,7 @@ export function CreateAdPage() {
 
               <div>
                 <label className="label">Locations</label>
-                <TagInput value={locations} onChange={setLocations} placeholder="Add country or city…" />
+                <MapLocationPicker value={pinnedLocations} onChange={setPinnedLocations} />
               </div>
 
               <div>
@@ -505,7 +509,7 @@ export function CreateAdPage() {
                     ['CTA', vals.cta?.replace(/_/g, ' ')],
                     ['Objective', vals.objective?.replace(/_/g, ' ')],
                     ['Budget', `$${vals.budgetAmount} ${vals.budgetType?.toLowerCase()}`],
-                    ['Audience', `${vals.ageMin}–${vals.ageMax} yrs · ${locations.join(', ')}`],
+                    ['Audience', `${vals.ageMin}–${vals.ageMax} yrs · ${pinnedLocations.length > 0 ? `${pinnedLocations.length} area(s) selected` : locations.join(', ')}`],
                     ['Creative', uploadedUrl ? `${uploadedType} uploaded` : 'None'],
                   ].map(([k, v]) => (
                     <div key={k} className="flex gap-4">

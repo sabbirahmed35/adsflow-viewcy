@@ -126,9 +126,7 @@ export class MetaService {
     const targeting: Record<string, unknown> = {
       age_min: params.ageMin,
       age_max: params.ageMax,
-      geo_locations: {
-        countries: params.locations.map((l) => this.countryToCode(l)),
-      },
+      geo_locations: this.buildGeoLocations(params.locations),
     };
 
     const budgetKey =
@@ -288,6 +286,31 @@ export class MetaService {
 
   async resumeAd(metaAdId: string): Promise<void> {
     await metaRequest('POST', `/${metaAdId}`, { status: 'ACTIVE' });
+  }
+
+  private buildGeoLocations(locations: string[]): Record<string, unknown> {
+    const customLocations: Array<{ latitude: number; longitude: number; radius: number; distance_unit: string }> = [];
+    const countries: string[] = [];
+
+    for (const loc of locations) {
+      // Check if it's a coordinate format: "lat,lng+Xmi"
+      const coordMatch = loc.match(/^(-?\d+\.\d+),(-?\d+\.\d+)(?:\+(\d+)mi)?/);
+      if (coordMatch) {
+        customLocations.push({
+          latitude: parseFloat(coordMatch[1]),
+          longitude: parseFloat(coordMatch[2]),
+          radius: coordMatch[3] ? parseInt(coordMatch[3]) : 10,
+          distance_unit: 'mile',
+        });
+      } else {
+        countries.push(this.countryToCode(loc));
+      }
+    }
+
+    if (customLocations.length > 0) {
+      return { custom_locations: customLocations };
+    }
+    return { countries: countries.length > 0 ? countries : ['US'] };
   }
 
   private countryToCode(country: string): string {
