@@ -40,19 +40,13 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    let payload: { userId: string };
-    try {
-      payload = jwt.verify(refreshToken, config.jwt.refreshSecret) as { userId: string };
-    } catch {
-      throw new AppError(401, 'Invalid refresh token');
-    }
-
+    // Refresh token is a UUID stored in DB - just look it up directly
     const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
     if (!stored || stored.expiresAt < new Date()) {
       throw new AppError(401, 'Refresh token expired or revoked');
     }
 
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({ where: { id: stored.userId } });
     if (!user) throw new AppError(401, 'User not found');
 
     // Rotate refresh token
