@@ -89,6 +89,8 @@ export function useAdminAds(params?: { page?: number; status?: AdStatus; search?
   return useQuery({
     queryKey: Keys.adminAds(params),
     queryFn: () => apiGet<Paginated<Ad>>('/admin/ads', params as any),
+    refetchInterval: 30 * 60 * 1000, // refresh every 30 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 

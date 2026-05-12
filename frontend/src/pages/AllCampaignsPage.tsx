@@ -3,16 +3,38 @@ import { useAdminAds, useAdminStats } from '../hooks';
 import { AdStatus } from '@shared/types';
 import { StatusBadge, Spinner, EmptyState, MetricCard } from '../components/ui';
 import { PageHeader } from '../components/layout/PageHeader';
-import { List, Search } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { List, Search, RefreshCw, Clock } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AllCampaignsPage() {
   const [status, setStatus] = useState<AdStatus | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const qc = useQueryClient();
 
-  const { data, isLoading } = useAdminAds({ status, search: search || undefined, page });
+  const { data, isLoading, isFetching, dataUpdatedAt } = useAdminAds({ status, search: search || undefined, page });
   const { data: stats } = useAdminStats();
+
+  const handleRefresh = () => {
+    qc.invalidateQueries({ queryKey: ['adminAds'] });
+    qc.invalidateQueries({ queryKey: ['adminStats'] });
+  };
+
+  // Format campaign name from metaCampaignId or headline
+  const getCampaignName = (ad: any) => {
+    if (ad.metaCampaignId) {
+      return `Campaign ${ad.metaCampaignId.slice(-6)}`;
+    }
+    return ad.headline || '—';
+  };
+
+  // Get last performance update time
+  const getLastUpdated = (ad: any) => {
+    if (!ad.performance?.length) return null;
+    const dates = ad.performance.map((p: any) => new Date(p.createdAt || p.date));
+    return new Date(Math.max(...dates.map((d: Date) => d.getTime())));
+  };
 
   return (
     <div>
@@ -63,6 +85,24 @@ export function AllCampaignsPage() {
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+
+            {/* Last updated + refresh button */}
+            <div className="ml-auto flex items-center gap-3">
+              {dataUpdatedAt > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <Clock className="w-3.5 h-3.5" />
+                  Updated {formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true })}
+                </div>
+              )}
+              <button
+                onClick={handleRefresh}
+                className="btn btn-sm gap-1.5"
+                disabled={isFetching}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+                {isFetching ? 'Refreshing…' : 'Refresh'}
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -78,19 +118,22 @@ export function AllCampaignsPage() {
               <table className="w-full">
                 <thead className="border-b border-gray-100">
                   <tr>
-                    {['Ad', 'Client', 'Status', 'Objective', 'Budget', 'Spend', 'Impressions', 'Created'].map((h) => (
+                    {['Campaign', 'Client', 'Status', 'Objective', 'Budget', 'Spend', 'Impressions', 'Data Updated', 'Created'].map((h) => (
                       <th key={h} className="text-left text-xs font-medium text-gray-400 px-4 py-3">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {data.data.map((ad) => {
-                    const totalSpend = ad.performance?.reduce((s, p) => s + p.spend, 0) ?? 0;
-                    const totalImpr = ad.performance?.reduce((s, p) => s + p.impressions, 0) ?? 0;
+                    const totalSpend = ad.performance?.reduce((s: number, p: any) => s + p.spend, 0) ?? 0;
+                    const totalImpr = ad.performance?.reduce((s: number, p: any) => s + p.impressions, 0) ?? 0;
+                    const lastUpdated = getLastUpdated(ad);
                     return (
                       <tr key={ad.id} className="border-b border-gray-50 hover:bg-gray-50">
                         <td className="px-4 py-3 max-w-[200px]">
-                          <p className="text-sm font-medium text-gray-900 truncate">{ad.headline || '—'}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {getCampaignName(ad)}
+                          </p>
                           <p className="text-xs text-gray-400 truncate">{ad.websiteUrl}</p>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">{ad.user?.name}</td>
@@ -102,6 +145,16 @@ export function AllCampaignsPage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {totalImpr > 0 ? totalImpr.toLocaleString() : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-400">
+                          {lastUpdated ? (
+                            <div>
+                              <p>{format(lastUpdated, 'MMM d, HH:mm')}</p>
+                              <p className="text-gray-300">{formatDistanceToNow(lastUpdated, { addSuffix: true })}</p>
+                            </div>
+                          ) : (
+                            <span className="text-gray-300">No data yet</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-400">
                           {formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true })}
