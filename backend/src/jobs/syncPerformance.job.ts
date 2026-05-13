@@ -10,7 +10,7 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
   // Fetch either a single ad or all published ads
   const ads = adId
     ? await prisma.ad.findMany({ where: { id: adId, metaAdId: { not: null } } })
-    : await prisma.ad.findMany({ where: { status: 'PUBLISHED', metaAdId: { not: null } } });
+    : await prisma.ad.findMany({ where: { status: 'PUBLISHED' as any, metaAdId: { not: null }, metaCampaignId: { not: null } } });
 
   logger.info(`[sync-performance] Syncing ${ads.length} ads`);
 
@@ -21,6 +21,19 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
     if (!ad.metaAdId) continue;
 
     try {
+      // Fetch campaign name if not stored yet
+      if (!ad.metaCampaignName && ad.metaCampaignId) {
+        try {
+          const campaign = await metaService.getCampaignName(ad.metaCampaignId);
+          if (campaign) {
+            await prisma.ad.update({
+              where: { id: ad.id },
+              data: { metaCampaignName: campaign } as any,
+            });
+          }
+        } catch (e) { /* ignore */ }
+      }
+
       const insights = await metaService.getAdInsights(ad.metaAdId, 'last_14d');
 
       for (const row of insights) {

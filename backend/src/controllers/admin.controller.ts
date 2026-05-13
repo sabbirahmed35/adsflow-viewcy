@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { adService } from '../services/ad.service';
 import { ok } from '../middleware/errorHandler';
 import { AdStatus } from '../types/shared';
+import { getSyncQueue } from '../config/queue';
 
 export class AdminController {
   async listAds(req: Request, res: Response) {
@@ -33,6 +34,12 @@ export class AdminController {
   async getStats(req: Request, res: Response) {
     const stats = await adService.getStats();
     ok(res, stats);
+  }
+
+  async syncNow(req: Request, res: Response) {
+    const syncQueue = getSyncQueue();
+    await syncQueue.add('sync-now', {}, { priority: 1 });
+    ok(res, { message: 'Sync triggered' });
   }
 }
 

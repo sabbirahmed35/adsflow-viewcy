@@ -35,6 +35,7 @@ adminRouter.get('/ads/pending',      (req, res, next) => adminController.getPend
 adminRouter.post('/ads/:id/approve', (req, res, next) => adminController.approve(req, res).catch(next));
 adminRouter.post('/ads/:id/reject',  (req, res, next) => adminController.reject(req, res).catch(next));
 adminRouter.get('/stats',            (req, res, next) => adminController.getStats(req, res).catch(next));
+adminRouter.post('/sync',             (req, res, next) => adminController.syncNow(req, res).catch(next));
 
 // ─── AI ───────────────────────────────────────────────────────────────────────
 export const aiRouter = Router();

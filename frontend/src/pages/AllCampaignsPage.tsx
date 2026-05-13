@@ -1,31 +1,26 @@
 import { useState } from 'react';
-import { useAdminAds, useAdminStats } from '../hooks';
+import { useAdminAds, useAdminStats, useSyncNow } from '../hooks';
 import { AdStatus } from '@shared/types';
 import { StatusBadge, Spinner, EmptyState, MetricCard } from '../components/ui';
 import { PageHeader } from '../components/layout/PageHeader';
 import { List, Search, RefreshCw, Clock } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
-
 export function AllCampaignsPage() {
   const [status, setStatus] = useState<AdStatus | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const qc = useQueryClient();
-
   const { data, isLoading, isFetching, dataUpdatedAt } = useAdminAds({ status, search: search || undefined, page });
   const { data: stats } = useAdminStats();
+  const syncNow = useSyncNow();
 
   const handleRefresh = () => {
-    qc.invalidateQueries({ queryKey: ['adminAds'] });
-    qc.invalidateQueries({ queryKey: ['adminStats'] });
+    syncNow.mutate();
   };
 
   // Format campaign name from metaCampaignId or headline
   const getCampaignName = (ad: any) => {
-    if (ad.metaCampaignId) {
-      return `Campaign ${ad.metaCampaignId.slice(-6)}`;
-    }
+    if (ad.metaCampaignName) return ad.metaCampaignName;
+    if (ad.metaCampaignId) return `Campaign ${ad.metaCampaignId.slice(-6)}`;
     return ad.headline || '—';
   };
 
@@ -97,10 +92,10 @@ export function AllCampaignsPage() {
               <button
                 onClick={handleRefresh}
                 className="btn btn-sm gap-1.5"
-                disabled={isFetching}
+                disabled={isFetching || syncNow.isPending}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-                {isFetching ? 'Refreshing…' : 'Refresh'}
+                <RefreshCw className={`w-3.5 h-3.5 ${isFetching || syncNow.isPending ? 'animate-spin' : ''}`} />
+                {syncNow.isPending ? 'Syncing from Meta…' : isFetching ? 'Refreshing…' : 'Sync from Meta'}
               </button>
             </div>
           </div>

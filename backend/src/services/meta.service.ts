@@ -261,6 +261,15 @@ export class MetaService {
     return res.id;
   }
 
+  async getCampaignName(campaignId: string): Promise<string | null> {
+    try {
+      const res = await metaRequest<{ name: string }>('GET', `/${campaignId}`, { fields: 'name' });
+      return res.name || null;
+    } catch {
+      return null;
+    }
+  }
+
   async getAdInsights(metaAdId: string, datePreset = 'last_14d') {
     try {
       const res = await metaRequest<{
