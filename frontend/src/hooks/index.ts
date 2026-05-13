@@ -110,6 +110,19 @@ export function useAdminStats() {
   });
 }
 
+export function useSyncNow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiPost('/admin/sync'),
+    onSuccess: () => {
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ['adminAds'] });
+        qc.invalidateQueries({ queryKey: ['adminStats'] });
+      }, 3000);
+    },
+  });
+}
+
 export function useApproveAd() {
   const qc = useQueryClient();
   return useMutation({
