@@ -83,7 +83,7 @@ const CTA_MAP: Record<string, string> = {
   SHOP_NOW: 'SHOP_NOW',
   SIGN_UP: 'SIGN_UP',
   GET_OFFER: 'GET_OFFER',
-  BOOK_NOW: 'BOOK_NOW',
+  BOOK_NOW: 'BOOK_TRAVEL',  // Meta's correct value for Book Now
   CONTACT_US: 'CONTACT_US',
   DOWNLOAD: 'DOWNLOAD',
 };
@@ -121,12 +121,10 @@ export class MetaService {
       const name = this.buildConversionName(slug);
       const urlPath = `/event/${slug}/`;
 
-      // Meta rule format: must use specific operator structure
+      // Meta rule format for URL-based custom conversion
       const rule = JSON.stringify({
         and: [{
-          event: { eq: 'PageView' },
-        }, {
-          url: { contains: urlPath },
+          url: { i_contains: urlPath }
         }]
       });
 
@@ -157,9 +155,9 @@ export class MetaService {
 
     logger.info('Starting Meta publish flow', { url: params.websiteUrl });
 
-    // Create custom conversion for viewcy event URLs
+    // Create custom conversion for SALES ads with event URLs
     let customConversionId: string | null = null;
-    if (params.websiteUrl.includes('viewcy.com/event/')) {
+    if (params.objective === 'SALES' && params.websiteUrl.includes('/event/')) {
       customConversionId = await this.createCustomConversion(params.websiteUrl);
     }
 
