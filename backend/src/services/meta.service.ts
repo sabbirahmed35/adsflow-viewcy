@@ -47,6 +47,7 @@ export interface MetaPublishResult {
   adSetId: string;
   adId: string;
   creativeId: string;
+  customConversionId: string | null;
 }
 
 export interface PublishAdParams {
@@ -92,6 +93,54 @@ export class MetaService {
     return config.meta.adAccountId;
   }
 
+  // ─── Custom conversion helpers ──────────────────────────────────────────────
+
+  private extractEventSlug(url: string): string | null {
+    try {
+      const match = url.match(/\/event\/([^/?#]+)/);
+      return match ? match[1] : null;
+    } catch { return null; }
+  }
+
+  private buildConversionName(slug: string): string {
+    // Replace underscores/hyphens with spaces, take first 2 words
+    const words = slug.replace(/[-_]/g, ' ').split(' ').filter(Boolean);
+    const first2 = words.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    return `Purchase - ${first2} ${date}`;
+  }
+
+  async createCustomConversion(websiteUrl: string): Promise<string | null> {
+    try {
+      const slug = this.extractEventSlug(websiteUrl);
+      if (!slug) {
+        logger.warn('Could not extract event slug from URL', { websiteUrl });
+        return null;
+      }
+
+      const name = this.buildConversionName(slug);
+      const urlPath = `/event/${slug}/`;
+
+      const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/customconversions`, {
+        name,
+        pixel_id: config.meta.pixelId,
+        rule: JSON.stringify({
+          and: [{
+            url: { contains: urlPath }
+          }]
+        }),
+        custom_event_type: 'PURCHASE',
+        description: `Auto-created for event: ${websiteUrl}`,
+      });
+
+      logger.info('Custom conversion created', { id: res.id, name, urlPath });
+      return res.id;
+    } catch (err: any) {
+      logger.warn('Failed to create custom conversion', { error: err.message, websiteUrl });
+      return null; // Don't block ad publishing if conversion creation fails
+    }
+  }
+
   async publishAd(params: PublishAdParams): Promise<MetaPublishResult> {
     if (!config.meta.accessToken || !config.meta.adAccountId) {
       throw new AppError(503, 'Meta API not configured');
@@ -99,13 +148,19 @@ export class MetaService {
 
     logger.info('Starting Meta publish flow', { url: params.websiteUrl });
 
+    // Create custom conversion for viewcy event URLs
+    let customConversionId: string | null = null;
+    if (params.websiteUrl.includes('viewcy.com/event/')) {
+      customConversionId = await this.createCustomConversion(params.websiteUrl);
+    }
+
     const campaignId = await this.createCampaign(params);
     const adSetId = await this.createAdSet(params, campaignId);
     const creativeId = await this.createCreative(params);
     const adId = await this.createAd(adSetId, creativeId, params.primaryText);
 
-    logger.info('Meta publish complete', { campaignId, adSetId, adId, creativeId });
-    return { campaignId, adSetId, adId, creativeId };
+    logger.info('Meta publish complete', { campaignId, adSetId, adId, creativeId, customConversionId });
+    return { campaignId, adSetId, adId, creativeId, customConversionId };
   }
 
   private async createCampaign(params: PublishAdParams): Promise<string> {

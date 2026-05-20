@@ -110,10 +110,11 @@ model Ad {
   placements  String[]
 
   // Meta API IDs
-  metaCampaignId   String?
-  metaCampaignName String?
-  metaAdSetId      String?
-  metaAdId         String?
+  metaCampaignId         String?
+  metaCampaignName       String?
+  metaAdSetId            String?
+  metaAdId               String?
+  metaCustomConversionId String?
 
   // Review
   rejectionReason String? @db.Text
