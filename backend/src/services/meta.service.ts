@@ -121,14 +121,21 @@ export class MetaService {
       const name = this.buildConversionName(slug);
       const urlPath = `/event/${slug}/`;
 
+      // Meta rule format: must use specific operator structure
+      const rule = JSON.stringify({
+        and: [{
+          event: { eq: 'PageView' },
+        }, {
+          url: { contains: urlPath },
+        }]
+      });
+
+      logger.debug('Creating custom conversion', { name, urlPath, rule });
+
       const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/customconversions`, {
         name,
         pixel_id: config.meta.pixelId,
-        rule: JSON.stringify({
-          and: [{
-            url: { contains: urlPath }
-          }]
-        }),
+        rule,
         custom_event_type: 'PURCHASE',
         description: `Auto-created for event: ${websiteUrl}`,
       });
@@ -136,7 +143,9 @@ export class MetaService {
       logger.info('Custom conversion created', { id: res.id, name, urlPath });
       return res.id;
     } catch (err: any) {
-      logger.warn('Failed to create custom conversion', { error: err.message, websiteUrl });
+      // Log full error for debugging
+      const fullError = err.response?.data?.error || err.message;
+      logger.error('Failed to create custom conversion', { error: fullError, websiteUrl });
       return null; // Don't block ad publishing if conversion creation fails
     }
   }
@@ -168,7 +177,7 @@ export class MetaService {
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/campaigns`, {
       name: `AdFlow — ${params.headline} — ${new Date().toISOString()}`,
       objective,
-      status: 'PAUSED',
+      status: 'ACTIVE',
       special_ad_categories: [],
       buying_type: 'AUCTION',
       is_adset_budget_sharing_enabled: false,
@@ -195,7 +204,7 @@ export class MetaService {
       billing_event: 'IMPRESSIONS',
       bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
       [budgetKey]: Math.round(params.budgetAmount * 100), // cents
-      status: 'PAUSED',
+      status: 'ACTIVE',
     };
 
     // Sales ads: add promoted_object with pixel and custom conversion
