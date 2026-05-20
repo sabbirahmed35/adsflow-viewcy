@@ -155,7 +155,7 @@ export class MetaService {
     }
 
     const campaignId = await this.createCampaign(params);
-    const adSetId = await this.createAdSet(params, campaignId);
+    const adSetId = await this.createAdSet(params, campaignId, customConversionId);
     const creativeId = await this.createCreative(params);
     const adId = await this.createAd(adSetId, creativeId, params.primaryText);
 
@@ -177,26 +177,40 @@ export class MetaService {
     return res.id;
   }
 
-  private async createAdSet(params: PublishAdParams, campaignId: string): Promise<string> {
+  private async createAdSet(params: PublishAdParams, campaignId: string, customConversionId?: string | null): Promise<string> {
     const targeting: Record<string, unknown> = {
       age_min: params.ageMin,
       age_max: params.ageMax,
       geo_locations: this.buildGeoLocations(params.locations),
     };
 
-    const budgetKey =
-      params.budgetType === 'DAILY' ? 'daily_budget' : 'lifetime_budget';
+    const isSales = params.objective === 'SALES';
+    const budgetKey = params.budgetType === 'DAILY' ? 'daily_budget' : 'lifetime_budget';
 
     const body: Record<string, unknown> = {
       name: `AdFlow AdSet — ${params.headline}`,
       campaign_id: campaignId,
       targeting,
-      optimization_goal: 'LINK_CLICKS',
+      optimization_goal: isSales ? 'OFFSITE_CONVERSIONS' : 'LINK_CLICKS',
       billing_event: 'IMPRESSIONS',
       bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
       [budgetKey]: Math.round(params.budgetAmount * 100), // cents
       status: 'PAUSED',
     };
+
+    // Sales ads: add promoted_object with pixel and custom conversion
+    if (isSales && config.meta.pixelId) {
+      const promotedObject: Record<string, unknown> = {
+        pixel_id: config.meta.pixelId,
+      };
+      if (customConversionId) {
+        promotedObject.custom_conversion_id = customConversionId;
+        promotedObject.custom_event_type = 'PURCHASE';
+      } else {
+        promotedObject.custom_event_type = 'PURCHASE';
+      }
+      body.promoted_object = promotedObject;
+    }
 
     if (params.startDate) {
       body.start_time = Math.floor(params.startDate.getTime() / 1000);
