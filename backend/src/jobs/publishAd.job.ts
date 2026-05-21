@@ -31,6 +31,7 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
       cta: ad.cta,
       creativeUrl: ad.creativeUrl,
       creativeType: ad.creativeType ?? 'IMAGE',
+      creativeKey: (ad as any).creativeKey ?? undefined,
       objective: ad.objective,
       budgetType: ad.budgetType,
       budgetAmount: ad.budgetAmount,
@@ -50,6 +51,7 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
         metaAdSetId: result.adSetId,
         metaAdId: result.adId,
         publishError: null,
+        ...(result.customConversionId && { metaCustomConversionId: result.customConversionId } as any),
       },
     });
 

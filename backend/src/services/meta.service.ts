@@ -102,12 +102,32 @@ export class MetaService {
     } catch { return null; }
   }
 
-  private buildConversionName(slug: string): string {
-    // Replace underscores/hyphens with spaces, take first 2 words
+  private buildEventName(slug: string, wordCount: number = 4): string {
+    // Replace underscores/hyphens with spaces, capitalize each word
     const words = slug.replace(/[-_]/g, ' ').split(' ').filter(Boolean);
-    const first2 = words.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    return `Purchase - ${first2} ${date}`;
+    return words.slice(0, wordCount)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  private buildDateSuffix(): string {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yy = String(now.getFullYear()).slice(-2);
+    return `${dd}${mm}${yy}`;
+  }
+
+  private buildAdName(url: string): string {
+    const slug = this.extractEventSlug(url);
+    if (!slug) return `AdFlow ${this.buildDateSuffix()}`;
+    return `${this.buildEventName(slug)} ${this.buildDateSuffix()}`;
+  }
+
+  private buildConversionName(slug: string): string {
+    const eventName = this.buildEventName(slug, 2);
+    const date = new Date().toISOString().split('T')[0];
+    return `Purchase - ${eventName} ${date}`;
   }
 
   async createCustomConversion(websiteUrl: string): Promise<string | null> {
@@ -186,7 +206,7 @@ export class MetaService {
     const campaignId = await this.createCampaign(params);
     const adSetId = await this.createAdSet(params, campaignId, customConversionId);
     const creativeId = await this.createCreative(params);
-    const adId = await this.createAd(adSetId, creativeId, params.primaryText);
+    const adId = await this.createAd(adSetId, creativeId, params.websiteUrl);
 
     logger.info('Meta publish complete', { campaignId, adSetId, adId, creativeId, customConversionId });
     return { campaignId, adSetId, adId, creativeId, customConversionId };
@@ -195,7 +215,7 @@ export class MetaService {
   private async createCampaign(params: PublishAdParams): Promise<string> {
     const objective = OBJECTIVE_MAP[params.objective] ?? 'OUTCOME_TRAFFIC';
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/campaigns`, {
-      name: `AdFlow — ${params.headline} — ${new Date().toISOString()}`,
+      name: this.buildAdName(params.websiteUrl),
       objective,
       status: 'ACTIVE',
       special_ad_categories: [],
@@ -217,7 +237,7 @@ export class MetaService {
     const budgetKey = params.budgetType === 'DAILY' ? 'daily_budget' : 'lifetime_budget';
 
     const body: Record<string, unknown> = {
-      name: `AdFlow AdSet — ${params.headline}`,
+      name: this.buildAdName(params.websiteUrl),
       campaign_id: campaignId,
       targeting,
       optimization_goal: isSales ? 'OFFSITE_CONVERSIONS' : 'LINK_CLICKS',
@@ -332,17 +352,24 @@ export class MetaService {
       };
     }
 
+    // Use original filename from S3 key or URL as creative name
+    const creativeName = params.creativeKey
+      ? params.creativeKey.split('/').pop()?.split('?')[0] || this.buildAdName(params.websiteUrl)
+      : params.creativeUrl
+        ? params.creativeUrl.split('/').pop()?.split('?')[0] || this.buildAdName(params.websiteUrl)
+        : this.buildAdName(params.websiteUrl);
+
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/adcreatives`, {
-      name: `AdFlow Creative — ${params.headline}`,
+      name: creativeName.substring(0, 255),
       object_story_spec: objectStorySpec,
     });
     logger.debug('Creative created', { id: res.id });
     return res.id;
   }
 
-  private async createAd(adSetId: string, creativeId: string, name: string): Promise<string> {
+  private async createAd(adSetId: string, creativeId: string, websiteUrl: string): Promise<string> {
     const adBody: Record<string, unknown> = {
-      name: `AdFlow Ad — ${name}`,
+      name: this.buildAdName(websiteUrl),
       adset_id: adSetId,
       creative: { creative_id: creativeId },
       status: 'ACTIVE',
