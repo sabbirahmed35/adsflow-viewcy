@@ -186,7 +186,7 @@ export class MetaService {
     const campaignId = await this.createCampaign(params);
     const adSetId = await this.createAdSet(params, campaignId, customConversionId);
     const creativeId = await this.createCreative(params);
-    const adId = await this.createAd(adSetId, creativeId, params.primaryText);
+    const adId = await this.createAd(adSetId, creativeId, params.primaryText, customConversionId);
 
     logger.info('Meta publish complete', { campaignId, adSetId, adId, creativeId, customConversionId });
     return { campaignId, adSetId, adId, creativeId, customConversionId };
@@ -229,18 +229,11 @@ export class MetaService {
 
     // Sales ads: add promoted_object with pixel and custom conversion
     if (isSales && config.meta.pixelId) {
-      if (customConversionId) {
-        // custom_conversion_id alone - Meta does NOT accept pixel_id with it
-        body.promoted_object = {
-          custom_conversion_id: customConversionId,
-        };
-      } else {
-        // Fallback to generic Purchase event with pixel
-        body.promoted_object = {
-          pixel_id: config.meta.pixelId,
-          custom_event_type: 'PURCHASE',
-        };
-      }
+      // Always use pixel as dataset, custom conversion linked via custom_event_type
+      body.promoted_object = {
+        pixel_id: config.meta.pixelId,
+        custom_event_type: 'PURCHASE',
+      };
     }
 
     if (params.startDate) {
@@ -341,7 +334,7 @@ export class MetaService {
     return res.id;
   }
 
-  private async createAd(adSetId: string, creativeId: string, name: string): Promise<string> {
+  private async createAd(adSetId: string, creativeId: string, name: string, customConversionId?: string | null): Promise<string> {
     const adBody: Record<string, unknown> = {
       name: `AdFlow Ad — ${name}`,
       adset_id: adSetId,
@@ -350,10 +343,14 @@ export class MetaService {
     };
 
     if (config.meta.pixelId) {
-      adBody.tracking_specs = [{
+      const trackingSpec: Record<string, unknown> = {
         'action.type': ['offsite_conversion'],
         fb_pixel: [config.meta.pixelId],
-      }];
+      };
+      if (customConversionId) {
+        trackingSpec['custom_conversion_id'] = [customConversionId];
+      }
+      adBody.tracking_specs = [trackingSpec];
     }
 
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/ads`, adBody);
