@@ -132,7 +132,7 @@ export class MetaService {
 
       const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/customconversions`, {
         name,
-        pixel_id: config.meta.pixelId,
+        event_source_id: config.meta.pixelId,  // Meta now requires event_source_id not pixel_id
         rule,
         custom_event_type: 'PURCHASE',
         description: `Auto-created for event: ${websiteUrl}`,

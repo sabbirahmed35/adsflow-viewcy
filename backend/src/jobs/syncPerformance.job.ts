@@ -10,7 +10,16 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
   // Fetch either a single ad or all published ads
   const ads = adId
     ? await prisma.ad.findMany({ where: { id: adId, metaAdId: { not: null } } })
-    : await prisma.ad.findMany({ where: { status: 'PUBLISHED' as any, metaAdId: { not: null }, metaCampaignId: { not: null } } });
+    : await prisma.ad.findMany({ 
+        where: { 
+          status: 'PUBLISHED' as any, 
+          metaAdId: { not: null },
+          metaCampaignId: { not: null },
+        } 
+      });
+
+  // Filter out placeholder IDs from import script (real Meta IDs are numeric only)
+  ads = ads.filter((ad: any) => /^\d+$/.test(ad.metaAdId));
 
   logger.info(`[sync-performance] Syncing ${ads.length} ads`);
 
