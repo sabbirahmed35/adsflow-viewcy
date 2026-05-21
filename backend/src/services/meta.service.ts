@@ -251,7 +251,6 @@ export class MetaService {
     // Sales ads: add promoted_object with pixel and custom conversion
     if (isSales && config.meta.pixelId) {
       if (customConversionId) {
-        // Use custom conversion - Meta links pixel automatically through the custom conversion
         body.promoted_object = {
           custom_conversion_id: customConversionId,
         };
