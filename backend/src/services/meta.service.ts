@@ -111,16 +111,16 @@ export class MetaService {
   }
 
   async createCustomConversion(websiteUrl: string): Promise<string | null> {
+    const slug = this.extractEventSlug(websiteUrl);
+    if (!slug) {
+      logger.warn('Could not extract event slug from URL', { websiteUrl });
+      return null;
+    }
+
+    const conversionName = this.buildConversionName(slug);
+    const urlPath = `/event/${slug}/`;
+
     try {
-      const slug = this.extractEventSlug(websiteUrl);
-      if (!slug) {
-        logger.warn('Could not extract event slug from URL', { websiteUrl });
-        return null;
-      }
-
-      const conversionName = this.buildConversionName(slug);
-      const urlPath = `/event/${slug}/`;
-
       // Meta rule format for URL-based custom conversion
       const rule = JSON.stringify({
         and: [{
