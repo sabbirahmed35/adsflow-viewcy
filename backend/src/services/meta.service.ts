@@ -118,7 +118,7 @@ export class MetaService {
         return null;
       }
 
-      const name = this.buildConversionName(slug);
+      const conversionName = this.buildConversionName(slug);
       const urlPath = `/event/${slug}/`;
 
       // Meta rule format for URL-based custom conversion
@@ -131,14 +131,14 @@ export class MetaService {
       logger.debug('Creating custom conversion', { name, urlPath, rule });
 
       const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/customconversions`, {
-        name,
+        name: conversionName,
         event_source_id: config.meta.pixelId,  // Meta now requires event_source_id not pixel_id
         rule,
         custom_event_type: 'PURCHASE',
         description: `Auto-created for event: ${websiteUrl}`,
       });
 
-      logger.info('Custom conversion created', { id: res.id, name, urlPath });
+      logger.info('Custom conversion created', { id: res.id, name: conversionName, urlPath });
       return res.id;
     } catch (err: any) {
       const fullError = err.response?.data?.error || err.message;
@@ -148,12 +148,12 @@ export class MetaService {
       // We need to look it up by name
       if (errMsg?.includes('Duplicate Custom Conversion Rule')) {
         try {
-          logger.info('Duplicate conversion found, looking up existing one...', { name });
+          logger.info('Duplicate conversion found, looking up existing one...', { name: conversionName });
           const existing = await metaRequest<{ data: Array<{ id: string; name: string }> }>(
             'GET', `/${this.accountId}/customconversions`,
             { fields: 'id,name', limit: '100' }
           );
-          const match = existing.data?.find((c: any) => c.name === name);
+          const match = existing.data?.find((c: any) => c.name === conversionName);
           if (match) {
             logger.info('Found existing custom conversion', { id: match.id, name: match.name });
             return match.id;
@@ -163,7 +163,7 @@ export class MetaService {
         }
       }
 
-      logger.error('Failed to create custom conversion', { error: fullError, websiteUrl });
+      logger.error('Failed to create custom conversion', { error: fullError, websiteUrl, name: conversionName });
       return null;
     }
   }
