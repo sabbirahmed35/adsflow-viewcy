@@ -148,21 +148,20 @@ export class MetaService {
       // We need to look it up by name
       if (errMsg?.includes('Duplicate Custom Conversion Rule')) {
         try {
-          logger.info('Duplicate conversion found, looking up existing one...', { conversionName });
-          const existing = await metaRequest<{ data: Array<{ id: string; name: string }> }>(
-            'GET', `/${this.accountId}/customconversions`,
-            { fields: 'id,name', limit: '200' }
+          logger.info('Duplicate conversion found, looking up by name...', { conversionName });
+          const { data: lookupResp } = await require('axios').get(
+            `https://graph.facebook.com/v20.0/${this.accountId}/customconversions`,
+            { params: { access_token: config.meta.accessToken, fields: 'id,name', limit: '200' } }
           );
-          logger.debug('Listed custom conversions', { count: existing.data?.length });
-          const match = existing.data?.find((c: any) => c.name === conversionName);
+          logger.debug('Listed conversions', { count: lookupResp.data?.length });
+          const match = lookupResp.data?.find((c: any) => c.name === conversionName);
           if (match) {
-            logger.info('Found existing custom conversion', { id: match.id, name: match.name });
+            logger.info('Reusing existing custom conversion', { id: match.id });
             return match.id;
-          } else {
-            logger.warn('No matching conversion found in list', { conversionName, available: existing.data?.map((c: any) => c.name) });
           }
+          logger.warn('No match found', { conversionName });
         } catch (lookupErr: any) {
-          logger.error('Could not look up existing conversion', { error: lookupErr.message });
+          logger.error('Lookup failed', { error: lookupErr.response?.data || lookupErr.message });
         }
       }
 
@@ -231,9 +230,8 @@ export class MetaService {
     // Sales ads: add promoted_object with pixel and custom conversion
     if (isSales && config.meta.pixelId) {
       if (customConversionId) {
-        // pixel_id + custom_conversion_id together
+        // custom_conversion_id alone - Meta does NOT accept pixel_id with it
         body.promoted_object = {
-          pixel_id: config.meta.pixelId,
           custom_conversion_id: customConversionId,
         };
       } else {
