@@ -148,17 +148,21 @@ export class MetaService {
       // We need to look it up by name
       if (errMsg?.includes('Duplicate Custom Conversion Rule')) {
         try {
-          logger.info('Duplicate conversion found, looking up existing one...', { name: conversionName });
+          logger.info('Duplicate conversion found, looking up existing one...', { conversionName });
           const existing = await metaRequest<{ data: Array<{ id: string; name: string }> }>(
-            'GET', `/${this.accountId}/customconversions?fields=id,name&limit=200`
+            'GET', `/${this.accountId}/customconversions`,
+            { fields: 'id,name', limit: '200' }
           );
+          logger.debug('Listed custom conversions', { count: existing.data?.length });
           const match = existing.data?.find((c: any) => c.name === conversionName);
           if (match) {
             logger.info('Found existing custom conversion', { id: match.id, name: match.name });
             return match.id;
+          } else {
+            logger.warn('No matching conversion found in list', { conversionName, available: existing.data?.map((c: any) => c.name) });
           }
         } catch (lookupErr: any) {
-          logger.warn('Could not look up existing conversion', { error: lookupErr.message });
+          logger.error('Could not look up existing conversion', { error: lookupErr.message });
         }
       }
 
