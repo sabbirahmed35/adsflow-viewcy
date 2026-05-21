@@ -58,6 +58,7 @@ export interface PublishAdParams {
   cta: string;
   creativeUrl: string;
   creativeType: 'IMAGE' | 'VIDEO';
+  creativeKey?: string;
   objective: string;
   budgetType: 'DAILY' | 'LIFETIME';
   budgetAmount: number;
