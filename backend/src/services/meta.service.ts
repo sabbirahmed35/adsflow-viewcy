@@ -141,10 +141,30 @@ export class MetaService {
       logger.info('Custom conversion created', { id: res.id, name, urlPath });
       return res.id;
     } catch (err: any) {
-      // Log full error for debugging
       const fullError = err.response?.data?.error || err.message;
+      const errMsg = typeof fullError === 'object' ? fullError.message : fullError;
+
+      // Handle duplicate - Meta returns the existing conversion name in the error
+      // We need to look it up by name
+      if (errMsg?.includes('Duplicate Custom Conversion Rule')) {
+        try {
+          logger.info('Duplicate conversion found, looking up existing one...', { name });
+          const existing = await metaRequest<{ data: Array<{ id: string; name: string }> }>(
+            'GET', `/${this.accountId}/customconversions`,
+            { fields: 'id,name', limit: '100' }
+          );
+          const match = existing.data?.find((c: any) => c.name === name);
+          if (match) {
+            logger.info('Found existing custom conversion', { id: match.id, name: match.name });
+            return match.id;
+          }
+        } catch (lookupErr: any) {
+          logger.warn('Could not look up existing conversion', { error: lookupErr.message });
+        }
+      }
+
       logger.error('Failed to create custom conversion', { error: fullError, websiteUrl });
-      return null; // Don't block ad publishing if conversion creation fails
+      return null;
     }
   }
 
@@ -207,16 +227,19 @@ export class MetaService {
 
     // Sales ads: add promoted_object with pixel and custom conversion
     if (isSales && config.meta.pixelId) {
-      const promotedObject: Record<string, unknown> = {
-        pixel_id: config.meta.pixelId,
-      };
       if (customConversionId) {
-        promotedObject.custom_conversion_id = customConversionId;
-        promotedObject.custom_event_type = 'PURCHASE';
+        // Use specific custom conversion - don't add custom_event_type when using custom_conversion_id
+        body.promoted_object = {
+          pixel_id: config.meta.pixelId,
+          custom_conversion_id: customConversionId,
+        };
       } else {
-        promotedObject.custom_event_type = 'PURCHASE';
+        // Fallback to generic Purchase event
+        body.promoted_object = {
+          pixel_id: config.meta.pixelId,
+          custom_event_type: 'PURCHASE',
+        };
       }
-      body.promoted_object = promotedObject;
     }
 
     if (params.startDate) {
