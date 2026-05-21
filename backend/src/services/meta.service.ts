@@ -128,7 +128,7 @@ export class MetaService {
         }]
       });
 
-      logger.debug('Creating custom conversion', { name, urlPath, rule });
+      logger.debug('Creating custom conversion', { conversionName, urlPath, rule });
 
       const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/customconversions`, {
         name: conversionName,
