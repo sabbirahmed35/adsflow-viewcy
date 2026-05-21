@@ -8,7 +8,7 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
   const { adId } = job.data;
 
   // Fetch either a single ad or all published ads
-  const ads = adId
+  let ads = adId
     ? await prisma.ad.findMany({ where: { id: adId, metaAdId: { not: null } } })
     : await prisma.ad.findMany({ 
         where: { 
