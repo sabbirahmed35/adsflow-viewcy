@@ -150,8 +150,7 @@ export class MetaService {
         try {
           logger.info('Duplicate conversion found, looking up existing one...', { name: conversionName });
           const existing = await metaRequest<{ data: Array<{ id: string; name: string }> }>(
-            'GET', `/${this.accountId}/customconversions`,
-            { fields: 'id,name', limit: '100' }
+            'GET', `/${this.accountId}/customconversions?fields=id,name&limit=200`
           );
           const match = existing.data?.find((c: any) => c.name === conversionName);
           if (match) {
@@ -228,13 +227,12 @@ export class MetaService {
     // Sales ads: add promoted_object with pixel and custom conversion
     if (isSales && config.meta.pixelId) {
       if (customConversionId) {
-        // Use specific custom conversion - don't add custom_event_type when using custom_conversion_id
+        // Use specific custom conversion only - pixel_id alone with custom_conversion_id
         body.promoted_object = {
-          pixel_id: config.meta.pixelId,
           custom_conversion_id: customConversionId,
         };
       } else {
-        // Fallback to generic Purchase event
+        // Fallback to generic Purchase event with pixel
         body.promoted_object = {
           pixel_id: config.meta.pixelId,
           custom_event_type: 'PURCHASE',
