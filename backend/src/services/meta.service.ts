@@ -142,15 +142,12 @@ export class MetaService {
     const urlPath = `/event/${slug}/`;
 
     try {
-      // Meta rule format - matches manual creation format exactly
+      // Meta rule format - matches manual creation exactly
       const rule = JSON.stringify({
-        and: [{
-          filters: [{
-            field: 'url',
-            operator: 'CONTAIN',
-            value: urlPath,
-          }]
-        }]
+        and: [
+          { event: { eq: 'Purchase' } },
+          { or: [{ URL: { i_contains: urlPath } }] }
+        ]
       });
 
       logger.debug('Creating custom conversion', { conversionName, urlPath, rule });
