@@ -142,10 +142,14 @@ export class MetaService {
     const urlPath = `/event/${slug}/`;
 
     try {
-      // Meta rule format - standard URL contains (same as manual creation)
+      // Meta rule format - matches manual creation format exactly
       const rule = JSON.stringify({
         and: [{
-          url: { contains: urlPath }
+          filters: [{
+            field: 'url',
+            operator: 'CONTAIN',
+            value: urlPath,
+          }]
         }]
       });
 
