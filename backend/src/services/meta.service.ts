@@ -59,6 +59,9 @@ export interface PublishAdParams {
   creativeUrl: string;
   creativeType: 'IMAGE' | 'VIDEO';
   creativeKey?: string;
+  existingCampaignId?: string | null;
+  existingAdSetId?: string | null;
+  existingCustomConversionId?: string | null;
   objective: string;
   budgetType: 'DAILY' | 'LIFETIME';
   budgetAmount: number;
@@ -199,14 +202,24 @@ export class MetaService {
 
     logger.info('Starting Meta publish flow', { url: params.websiteUrl });
 
-    // Create custom conversion for SALES ads with event URLs
-    let customConversionId: string | null = null;
-    if (params.objective === 'SALES' && params.websiteUrl.includes('/event/')) {
-      customConversionId = await this.createCustomConversion(params.websiteUrl);
-    }
+    // Reuse existing campaign/adset if provided (multiple ads under same campaign)
+    let customConversionId: string | null = params.existingCustomConversionId || null;
+    let campaignId: string;
+    let adSetId: string;
 
-    const campaignId = await this.createCampaign(params);
-    const adSetId = await this.createAdSet(params, campaignId, customConversionId);
+    if (params.existingCampaignId && params.existingAdSetId) {
+      // Reuse existing campaign and ad set
+      campaignId = params.existingCampaignId;
+      adSetId = params.existingAdSetId;
+      logger.info('Reusing existing campaign and ad set', { campaignId, adSetId });
+    } else {
+      // Create custom conversion for SALES ads with event URLs
+      if (params.objective === 'SALES' && params.websiteUrl.includes('/event/')) {
+        customConversionId = await this.createCustomConversion(params.websiteUrl);
+      }
+      campaignId = await this.createCampaign(params);
+      adSetId = await this.createAdSet(params, campaignId, customConversionId);
+    }
     const creativeId = await this.createCreative(params);
     const adId = await this.createAd(adSetId, creativeId, params.websiteUrl);
 
