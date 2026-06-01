@@ -9,7 +9,6 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
   const { adId } = job.data;
   logger.info(`[publish-ad] Starting job for ad ${adId}`);
 
-  // Mark as PUBLISHING
   await prisma.ad.update({
     where: { id: adId },
     data: { status: AdStatus.PUBLISHING as any },
@@ -17,52 +16,52 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
 
   const ad = await prisma.ad.findUnique({ where: { id: adId } });
   if (!ad) throw new Error(`Ad ${adId} not found`);
+  if (!ad.creativeUrl) throw new Error('Ad has no creative URL — cannot publish');
 
-  if (!ad.creativeUrl) {
-    throw new Error('Ad has no creative URL — cannot publish');
-  }
-
-  // ── Look up existing campaign/adset for same event URL ──────────────────────
-  // If another ad with the same websiteUrl was already published,
-  // reuse its campaign and ad set
+  // ── Find existing campaign/adset for same URL ────────────────────────────
+  // Retry up to 12 times (60s) to handle bulk ads publishing concurrently —
+  // the first ad creates the campaign, subsequent ads must wait and reuse it.
   let existingCampaignId: string | null = null;
   let existingAdSetId: string | null = null;
   let existingCustomConversionId: string | null = null;
 
-  // Check for PUBLISHED or PUBLISHING ads with same URL
-  // PUBLISHING handles the case where bulk ads are approved together
-  const existingAd = await prisma.ad.findFirst({
-    where: {
-      websiteUrl: ad.websiteUrl,
-      status: { in: [AdStatus.PUBLISHED as any, AdStatus.PUBLISHING as any] },
-      metaCampaignId: { not: null },
-      metaAdSetId: { not: null },
-      id: { not: adId },
-    },
-    orderBy: { createdAt: 'asc' }, // use the FIRST one created
-  });
-
-  // If another ad is still PUBLISHING, wait briefly for it to finish
-  if (existingAd && (existingAd as any).status === AdStatus.PUBLISHING) {
-    logger.info('[publish-ad] Another ad is still publishing, waiting 5s...', { existingAdId: existingAd.id });
-    await new Promise(r => setTimeout(r, 5000));
-    // Re-fetch to get updated campaign IDs
-    const refreshed = await prisma.ad.findUnique({ where: { id: existingAd.id } });
-    if (refreshed?.metaCampaignId) {
-      existingAd.metaCampaignId = refreshed.metaCampaignId;
-      existingAd.metaAdSetId = refreshed.metaAdSetId;
-    }
-  }
-
-  if (existingAd) {
-    existingCampaignId = existingAd.metaCampaignId;
-    existingAdSetId = existingAd.metaAdSetId;
-    existingCustomConversionId = (existingAd as any).metaCustomConversionId || null;
-    logger.info(`[publish-ad] Found existing campaign for URL, reusing`, {
-      campaignId: existingCampaignId,
-      adSetId: existingAdSetId,
-      url: ad.websiteUrl,
+  for (let attempt = 0; attempt < 12; attempt++) {
+    // Look for any sibling ad with same URL that already has Meta IDs
+    const sibling = await (prisma as any).ad.findFirst({
+      where: {
+        websiteUrl: ad.websiteUrl,
+        metaCampaignId: { not: null },
+        metaAdSetId: { not: null },
+        id: { not: adId },
+      },
+      orderBy: { createdAt: 'asc' },
     });
+
+    if (sibling) {
+      existingCampaignId = sibling.metaCampaignId;
+      existingAdSetId = sibling.metaAdSetId;
+      existingCustomConversionId = sibling.metaCustomConversionId || null;
+      logger.info('[publish-ad] Reusing existing campaign/adset', { campaignId: existingCampaignId, adSetId: existingAdSetId });
+      break;
+    }
+
+    // Check if another sibling is currently publishing (will create campaign soon)
+    const publishingSibling = await (prisma as any).ad.findFirst({
+      where: {
+        websiteUrl: ad.websiteUrl,
+        status: AdStatus.PUBLISHING as any,
+        id: { not: adId },
+      },
+    });
+
+    if (publishingSibling) {
+      logger.info(`[publish-ad] Sibling ad is publishing, waiting 5s (attempt ${attempt + 1}/12)...`);
+      await new Promise(r => setTimeout(r, 5000));
+    } else {
+      // No sibling publishing — this is the first ad, create new campaign
+      logger.info('[publish-ad] No existing campaign found, creating new one');
+      break;
+    }
   }
 
   try {
@@ -89,7 +88,7 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
       existingCustomConversionId,
     });
 
-    await prisma.ad.update({
+    await (prisma as any).ad.update({
       where: { id: adId },
       data: {
         status: AdStatus.PUBLISHED as any,
@@ -97,22 +96,17 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
         metaAdSetId: result.adSetId,
         metaAdId: result.adId,
         publishError: null,
-        ...(result.customConversionId && { metaCustomConversionId: result.customConversionId } as any),
+        ...(result.customConversionId && { metaCustomConversionId: result.customConversionId }),
       },
     });
 
     logger.info(`[publish-ad] Ad ${adId} published successfully`, result);
   } catch (err: any) {
     logger.error(`[publish-ad] Failed to publish ad ${adId}`, { error: err.message });
-
-    await prisma.ad.update({
+    await (prisma as any).ad.update({
       where: { id: adId },
-      data: {
-        status: AdStatus.FAILED as any,
-        publishError: err.message,
-      },
+      data: { status: AdStatus.FAILED as any, publishError: err.message },
     });
-
     throw err;
   }
 }
