@@ -18,6 +18,20 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
   if (!ad) throw new Error(`Ad ${adId} not found`);
   if (!ad.creativeUrl) throw new Error('Ad has no creative URL — cannot publish');
 
+  // ── Stagger bulk ads: if there's a sibling with same URL created earlier,
+  // wait 10s to let it create the campaign first ───────────────────────────
+  const olderSibling = await (prisma as any).ad.findFirst({
+    where: {
+      websiteUrl: ad.websiteUrl,
+      id: { not: adId },
+      createdAt: { lt: ad.createdAt },
+    },
+  });
+  if (olderSibling) {
+    logger.info('[publish-ad] Detected bulk ad — waiting 15s for first ad to create campaign...');
+    await new Promise(r => setTimeout(r, 15000));
+  }
+
   // ── Find existing campaign/adset for same URL ────────────────────────────
   // Retry up to 12 times (60s) to handle bulk ads publishing concurrently —
   // the first ad creates the campaign, subsequent ads must wait and reuse it.
