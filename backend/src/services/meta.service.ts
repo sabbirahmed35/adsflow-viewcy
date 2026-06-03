@@ -262,13 +262,10 @@ export class MetaService {
       status: 'ACTIVE',
     };
 
-    // Sales ads: add promoted_object with pixel and custom conversion
+    // Sales ads: add promoted_object
     if (isSales && config.meta.pixelId) {
       if (customConversionId) {
-        // Include both pixel_id and custom_conversion_id for proper UI display
-        // pixel_id shows the dataset, custom_conversion_id shows the conversion event
         body.promoted_object = {
-          pixel_id: config.meta.pixelId,
           custom_conversion_id: customConversionId,
         };
       } else {
@@ -288,6 +285,22 @@ export class MetaService {
 
     const res = await metaRequest<{ id: string }>('POST', `/${this.accountId}/adsets`, body);
     logger.debug('Ad set created', { id: res.id });
+
+    // If using custom conversion, also update adset to link pixel for UI display
+    if (isSales && customConversionId && config.meta.pixelId) {
+      try {
+        await metaRequest('POST', `/${res.id}`, {
+          promoted_object: JSON.stringify({
+            pixel_id: config.meta.pixelId,
+            custom_conversion_id: customConversionId,
+          }),
+        });
+        logger.debug('Ad set promoted_object updated with pixel', { id: res.id });
+      } catch (e: any) {
+        logger.warn('Could not update adset promoted_object', { error: e.message });
+      }
+    }
+
     return res.id;
   }
 
