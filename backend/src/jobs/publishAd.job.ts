@@ -28,8 +28,8 @@ export async function handlePublishAd(job: Job<PublishAdJobPayload>): Promise<vo
     },
   });
   if (olderSibling) {
-    logger.info('[publish-ad] Detected bulk ad — waiting 15s for first ad to create campaign...');
-    await new Promise(r => setTimeout(r, 15000));
+    logger.info('[publish-ad] Detected bulk ad — waiting 60s for first ad to create campaign...');
+    await new Promise(r => setTimeout(r, 60000));
   }
 
   // ── Find existing campaign/adset for same URL ────────────────────────────
