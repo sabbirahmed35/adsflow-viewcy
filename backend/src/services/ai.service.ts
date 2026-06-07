@@ -82,7 +82,7 @@ Respond with ONLY valid JSON, no markdown:
         .map((b) => (b as { type: 'text'; text: string }).text)
         .join('');
 
-      const clean = text.replace(/```json|```/g, '').trim();
+      const clean = text.replace(/```json|```/g, '').trim().replace(/,(\s*[}\]])/g, '$1');
       const parsed = JSON.parse(clean);
       return {
         title: parsed.title || '',
@@ -181,7 +181,10 @@ Return ONLY valid JSON, no markdown:
       .join('');
 
     try {
-      const clean = text.replace(/```json|```/g, '').trim();
+      const clean = text
+        .replace(/```json|```/g, '')  // strip code fences
+        .trim()
+        .replace(/,(\s*[}\]])/g, '$1'); // remove trailing commas
       const parsed = JSON.parse(clean);
       return {
         primaryText: parsed.primaryText || parsed.primary_text || '',
@@ -254,7 +257,7 @@ Return ONLY valid JSON:
       .map((b) => (b as { type: 'text'; text: string }).text)
       .join('');
 
-    const clean = text.replace(/```json|```/g, '').trim();
+    const clean = text.replace(/```json|```/g, '').trim().replace(/,(\s*[}\]])/g, '$1');
     const parsed = JSON.parse(clean);
     return {
       primaryText: parsed.primaryText || parsed.primary_text || '',
