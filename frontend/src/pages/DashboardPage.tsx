@@ -48,9 +48,9 @@ export function DashboardPage() {
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Metrics */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <MetricCard label="Total ads" value={adsData?.total ?? '—'} />
           <MetricCard
             label="Published"
@@ -75,7 +75,7 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Recent ads */}
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
@@ -125,7 +125,7 @@ export function DashboardPage() {
               <h3 className="text-sm font-semibold text-gray-900">Impressions (14 days)</h3>
               <span className="text-xs text-gray-400">All campaigns</span>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
               <div className="stat-card">
                 <p className="text-xs text-gray-500">Impressions</p>
                 <p className="text-lg font-semibold">24.1K</p>

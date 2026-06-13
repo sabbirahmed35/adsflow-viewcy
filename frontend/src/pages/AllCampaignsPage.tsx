@@ -37,10 +37,10 @@ export function AllCampaignsPage() {
         title="All campaigns"
         description="Platform-wide view of every ad"
       />
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
 
         {stats && (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <MetricCard label="Total ads" value={stats.totalAds} />
             <MetricCard
               label="Total impressions"
@@ -59,8 +59,8 @@ export function AllCampaignsPage() {
 
         <div className="card overflow-hidden">
           {/* Filters */}
-          <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-            <div className="relative flex-1 max-w-xs">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 p-3 md:p-4 border-b border-gray-100">
+            <div className="relative w-full sm:flex-1 sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -82,7 +82,7 @@ export function AllCampaignsPage() {
             </select>
 
             {/* Last updated + refresh button */}
-            <div className="ml-auto flex items-center gap-3">
+            <div className="sm:ml-auto flex items-center gap-2 md:gap-3">
               {dataUpdatedAt > 0 && (
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
                   <Clock className="w-3.5 h-3.5" />
@@ -110,7 +110,7 @@ export function AllCampaignsPage() {
             />
           ) : (
             <>
-              <table className="w-full">
+              <div className="overflow-x-auto"><table className="w-full min-w-[800px]">
                 <thead className="border-b border-gray-100">
                   <tr>
                     {['Campaign', 'Client', 'Status', 'Objective', 'Budget', 'Spend', 'Impressions', 'Data Updated', 'Created'].map((h) => (
@@ -158,7 +158,7 @@ export function AllCampaignsPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
 
               {(data.totalPages ?? 1) > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">

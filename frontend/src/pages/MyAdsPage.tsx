@@ -52,7 +52,7 @@ export function MyAdsPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
         )}
@@ -86,7 +86,7 @@ export function MyAdsPage() {
             />
           ) : (
             <>
-              <table className="w-full">
+              <div className="overflow-x-auto"><table className="w-full min-w-[800px]">
                 <thead className="border-b border-gray-100">
                   <tr>
                     {['Ad', 'Status', 'Objective', 'Budget', 'Created', ''].map((h) => (
@@ -157,7 +157,7 @@ export function MyAdsPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
 
               {/* Pagination */}
               {(data.totalPages ?? 1) > 1 && (

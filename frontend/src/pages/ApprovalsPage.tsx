@@ -35,7 +35,7 @@ function ApprovalCard({ ad }: { ad: Ad }) {
 
   return (
     <div className="card p-5">
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Left: details */}
         <div>
           <div className="flex items-center gap-2 mb-3">

@@ -40,7 +40,7 @@ function AdPerformanceChart({ adId }: { adId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard label="Impressions" value={totals.impressions.toLocaleString()} />
         <MetricCard label="Clicks" value={totals.clicks.toLocaleString()} />
         <MetricCard label="CTR" value={`${avgCtr}%`} />
@@ -87,7 +87,7 @@ export function PerformancePage() {
         description="Real-time metrics from Meta Insights API"
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {isLoading ? (
           <div className="flex justify-center py-16"><Spinner /></div>
         ) : !publishedAds.length ? (
@@ -99,7 +99,7 @@ export function PerformancePage() {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Ad selector */}
             <div className="card p-4 h-fit">
               <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Published ads</p>

@@ -18,7 +18,7 @@ interface AdCopy { primaryText: string; headline: string; description: string; }
 function Steps({ current }: { current: number }) {
   const steps = ['Ad details', 'AI copy', 'Campaign setup', 'Review & submit'];
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="flex items-center gap-0 mb-6 md:mb-8">
       {steps.map((label, i) => {
         const n = i + 1; const done = n < current; const active = n === current;
         return (
@@ -29,7 +29,7 @@ function Steps({ current }: { current: number }) {
                 'border-emerald-500 bg-emerald-500 text-white': done,
                 'border-gray-300 bg-white text-gray-400': !active && !done,
               })}>{done ? '✓' : n}</div>
-              <span className="text-xs font-medium">{label}</span>
+              <span className="hidden sm:inline text-xs font-medium">{label}</span>
             </div>
             {i < steps.length - 1 && <div className={clsx('flex-1 h-px mx-3 min-w-8', done ? 'bg-emerald-300' : 'bg-gray-200')} />}
           </div>
@@ -161,12 +161,12 @@ export function CreateAdPage() {
   return (
     <div>
       <PageHeader title="Create new ad" description="AI-powered ad creation in 4 steps" />
-      <div className="p-6 max-w-5xl">
+      <div className="p-4 md:p-6 max-w-5xl">
         <Steps current={step} />
         {error && <div className="flex items-center gap-2 mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</div>}
 
         {step === 1 && (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <div className="card p-5 space-y-4">
               <h3 className="font-semibold text-gray-900">Ad details</h3>
               <div>
@@ -240,7 +240,7 @@ export function CreateAdPage() {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               <div className="card p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-900">Copy {activeCopyTab}</h3>
@@ -279,7 +279,7 @@ export function CreateAdPage() {
         )}
 
         {step === 3 && (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <div className="card p-5 space-y-4">
               <h3 className="font-semibold text-gray-900">Campaign settings</h3>
               <div><label className="label">Campaign objective</label><select {...register('objective')} className="input">{Object.values(CampaignObjective).map((v) => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}</select></div>
@@ -312,7 +312,7 @@ export function CreateAdPage() {
         )}
 
         {step === 4 && (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-4">
               <div className="card p-5">
                 <h3 className="font-semibold text-gray-900 mb-4">Summary — {adIds.length} ad{adIds.length > 1 ? 's' : ''}</h3>

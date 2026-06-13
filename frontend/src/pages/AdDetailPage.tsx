@@ -135,7 +135,7 @@ export function AdDetailPage() {
 
   if (!ad) {
     return (
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <EmptyState title="Ad not found" description="This ad may have been deleted or you don't have access" />
       </div>
     );
@@ -230,7 +230,7 @@ export function AdDetailPage() {
           {/* Campaign settings card */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Campaign settings</h3>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
               {[
                 ['Objective', ad.objective.replace(/_/g, ' ')],
                 ['Budget', `$${ad.budgetAmount} ${ad.budgetType.toLowerCase()}`],
@@ -249,7 +249,7 @@ export function AdDetailPage() {
             {(ad.metaCampaignId || ad.metaAdId) && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-xs text-gray-400 mb-2">Meta API IDs</p>
-                <div className="grid grid-cols-3 gap-2 text-xs font-mono text-gray-500">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs font-mono text-gray-500">
                   {ad.metaCampaignId && <span>Campaign: {ad.metaCampaignId}</span>}
                   {ad.metaAdSetId && <span>Ad set: {ad.metaAdSetId}</span>}
                   {ad.metaAdId && <span>Ad: {ad.metaAdId}</span>}
@@ -269,7 +269,7 @@ export function AdDetailPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
                     <MetricCard label="Impressions" value={totals.impressions.toLocaleString()} />
                     <MetricCard label="Clicks" value={totals.clicks.toLocaleString()} />
                     <MetricCard
