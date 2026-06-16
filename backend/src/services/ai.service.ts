@@ -170,7 +170,7 @@ Return ONLY valid JSON, no markdown:
 {"primaryText":"...","headline":"...","description":"..."}`;
 
     const message = await getClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 800,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -247,7 +247,7 @@ Return ONLY valid JSON:
 {"primaryText":"...","headline":"...","description":"..."}`;
 
     const message = await getClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 800,
       messages: [{ role: 'user', content: prompt }],
     });
