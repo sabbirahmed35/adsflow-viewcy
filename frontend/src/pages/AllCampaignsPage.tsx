@@ -110,18 +110,25 @@ export function AllCampaignsPage() {
             />
           ) : (
             <>
-              <div className="overflow-x-auto"><table className="w-full min-w-[800px]">
+              <div className="overflow-x-auto"><table className="w-full min-w-[1100px]">
                 <thead className="border-b border-gray-100">
                   <tr>
-                    {['Campaign', 'Client', 'Status', 'Objective', 'Budget', 'Spend', 'Impressions', 'Data Updated', 'Created'].map((h) => (
+                    {['Campaign', 'Status', 'Reach', 'Impressions', 'Results', 'Link Clicks', 'CTR', 'CPC', 'Spend', 'Results Value', 'Data Updated'].map((h) => (
                       <th key={h} className="text-left text-xs font-medium text-gray-400 px-4 py-3">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {data.data.map((ad) => {
-                    const totalSpend = ad.performance?.reduce((s: number, p: any) => s + p.spend, 0) ?? 0;
-                    const totalImpr = ad.performance?.reduce((s: number, p: any) => s + p.impressions, 0) ?? 0;
+                    const perf = ad.performance ?? [];
+                    const totalSpend = perf.reduce((s: number, p: any) => s + p.spend, 0);
+                    const totalImpr = perf.reduce((s: number, p: any) => s + p.impressions, 0);
+                    const totalReach = perf.reduce((s: number, p: any) => s + (p.reach ?? 0), 0);
+                    const totalClicks = perf.reduce((s: number, p: any) => s + p.clicks, 0);
+                    const totalResults = perf.reduce((s: number, p: any) => s + (p.conversions ?? 0), 0);
+                    const totalValue = perf.reduce((s: number, p: any) => s + (p.conversionValue ?? 0), 0);
+                    const avgCtr = totalImpr > 0 ? (totalClicks / totalImpr) * 100 : 0;
+                    const avgCpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
                     const lastUpdated = getLastUpdated(ad);
                     return (
                       <tr key={ad.id} className="border-b border-gray-50 hover:bg-gray-50">
@@ -129,18 +136,17 @@ export function AllCampaignsPage() {
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {getCampaignName(ad)}
                           </p>
-                          <p className="text-xs text-gray-400 truncate">{ad.websiteUrl}</p>
+                          <p className="text-xs text-gray-400 truncate">{ad.user?.name}</p>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{ad.user?.name}</td>
                         <td className="px-4 py-3"><StatusBadge status={ad.status} /></td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{ad.objective.replace(/_/g, ' ')}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">${ad.budgetAmount}/{ad.budgetType === 'DAILY' ? 'd' : 'lt'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {totalSpend > 0 ? `$${totalSpend.toFixed(0)}` : '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {totalImpr > 0 ? totalImpr.toLocaleString() : '—'}
-                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{totalReach > 0 ? totalReach.toLocaleString() : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{totalImpr > 0 ? totalImpr.toLocaleString() : '—'}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{totalResults > 0 ? totalResults.toLocaleString() : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{totalClicks > 0 ? totalClicks.toLocaleString() : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{avgCtr > 0 ? `${avgCtr.toFixed(2)}%` : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{avgCpc > 0 ? `$${avgCpc.toFixed(2)}` : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{totalSpend > 0 ? `$${totalSpend.toFixed(2)}` : '—'}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-emerald-700">{totalValue > 0 ? `$${totalValue.toFixed(2)}` : '—'}</td>
                         <td className="px-4 py-3 text-xs text-gray-400">
                           {lastUpdated ? (
                             <div>
@@ -150,9 +156,6 @@ export function AllCampaignsPage() {
                           ) : (
                             <span className="text-gray-300">No data yet</span>
                           )}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-gray-400">
-                          {formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true })}
                         </td>
                       </tr>
                     );

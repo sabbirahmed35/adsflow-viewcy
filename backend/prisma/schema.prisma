@@ -146,6 +146,7 @@ model AdPerformance {
   cpm          Float    @default(0)
   spend        Float    @default(0)
   conversions  Int      @default(0)
+  conversionValue Float @default(0)
   reach        Int      @default(0)
   frequency    Float    @default(0)
 

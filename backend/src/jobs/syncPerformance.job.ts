@@ -62,6 +62,14 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
             )
             .reduce((sum, a) => sum + parseInt(a.value), 0) ?? 0;
 
+        // Results value (purchase conversion value)
+        const conversionValue =
+          (row as any).action_values
+            ?.filter((a: any) =>
+              ['purchase', 'offsite_conversion.fb_pixel_purchase', 'omni_purchase'].includes(a.action_type)
+            )
+            .reduce((sum: number, a: any) => sum + parseFloat(a.value), 0) ?? 0;
+
         await prisma.adPerformance.upsert({
           where: { adId_date: { adId: ad.id, date } },
           create: {
@@ -74,6 +82,7 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
             cpm,
             spend,
             conversions,
+            conversionValue,
             reach,
             frequency,
           },
@@ -85,6 +94,7 @@ export async function handleSyncPerformance(job: Job<SyncPerformanceJobPayload>)
             cpm,
             spend,
             conversions,
+            conversionValue,
             reach,
             frequency,
           },

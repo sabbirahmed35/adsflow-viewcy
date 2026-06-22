@@ -438,11 +438,12 @@ export class MetaService {
           cpm: string;
           spend: string;
           actions?: Array<{ action_type: string; value: string }>;
+          action_values?: Array<{ action_type: string; value: string }>;
           reach: string;
           frequency: string;
         }>;
       }>('GET', `/${metaAdId}/insights`, {
-        fields: 'date_start,impressions,clicks,ctr,cpc,cpm,spend,actions,reach,frequency',
+        fields: 'date_start,impressions,clicks,ctr,cpc,cpm,spend,actions,action_values,reach,frequency',
         date_preset: datePreset,
         time_increment: '1',
         level: 'ad',
